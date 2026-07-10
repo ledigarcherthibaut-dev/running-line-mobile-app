@@ -25,13 +25,6 @@ const config: ExpoConfig = {
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
-    config: {
-      googleMaps: {
-        // Optionnel : la carte utilise des tuiles OSM gratuites (UrlTile) par défaut, pas
-        // besoin de clé Google Maps. Ne renseigner que si on bascule provider="google" plus tard.
-        apiKey: process.env.GOOGLE_MAPS_API_KEY,
-      },
-    },
   },
   web: {
     favicon: './assets/favicon.png',
@@ -42,6 +35,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    '@maplibre/maplibre-react-native',
     'expo-sharing',
     [
       'expo-location',

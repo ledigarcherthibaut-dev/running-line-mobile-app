@@ -5,7 +5,7 @@ import { fonts } from '../../theme/tokens';
 import { RouteMapHandle, RouteMapProps } from './RouteMap.types';
 
 /**
- * react-native-maps n'a pas de rendu web. La cible réelle est Android (EAS build) ;
+ * MapLibre n'a pas de rendu web pour React Native. La cible réelle est Android (EAS build) ;
  * ce placeholder ne sert qu'à pouvoir vérifier la mise en page autour de la carte
  * pendant le développement dans le navigateur.
  */
