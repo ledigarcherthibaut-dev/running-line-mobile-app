@@ -21,7 +21,7 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function resolveScheme(mode: ThemeMode, systemScheme: 'dark' | 'light' | null | undefined): 'dark' | 'light' {
+function resolveScheme(mode: ThemeMode, systemScheme: ReturnType<typeof useColorScheme>): 'dark' | 'light' {
   if (mode === 'auto') return systemScheme === 'light' ? 'light' : 'dark';
   return mode;
 }

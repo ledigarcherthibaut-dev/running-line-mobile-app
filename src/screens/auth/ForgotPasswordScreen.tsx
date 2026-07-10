@@ -1,93 +1,78 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextField } from '../../components/ui/TextField';
+import { Button } from '../../components/ui/Button';
 import { resetPassword } from '../../lib/supabase/auth';
 import { useTheme } from '../../theme/ThemeContext';
+import { fonts } from '../../theme/tokens';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
+/** Port de doForgot (index.html:3154-3166). */
 export function ForgotPasswordScreen({ navigation }: Props) {
   const { tokens } = useTheme();
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
-    setError(null);
-    setStatus('sending');
-    const { error: resetError } = await resetPassword(email.trim());
-    if (resetError) {
-      setError(resetError.message);
-      setStatus('idle');
+    setError('');
+    if (!email.trim()) {
+      setError('Entre ton email.');
       return;
     }
-    setStatus('sent');
+    setLoading(true);
+    const { error: resetError } = await resetPassword(email.trim());
+    setLoading(false);
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+    setSent(true);
+    setTimeout(() => navigation.goBack(), 2000);
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: tokens.bg }]}>
-      <Text style={[styles.title, { color: tokens.text }]}>Mot de passe oublié</Text>
+    <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.container}>
+          <View style={[styles.card, { backgroundColor: tokens.surface }]}>
+            <Text style={[styles.cardTitle, { color: tokens.text, fontFamily: fonts.display }]}>MOT DE PASSE OUBLIÉ</Text>
+            <Text style={[styles.cardSubtitle, { color: tokens.text2 }]}>On t'envoie un lien de réinitialisation par email.</Text>
 
-      <TextInput
-        style={[styles.input, { borderColor: tokens.border2, color: tokens.text }]}
-        placeholder="Email"
-        placeholderTextColor={tokens.text3}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+            <TextField
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="ton@email.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              editable={!sent}
+            />
 
-      {error ? <Text style={{ color: tokens.danger }}>{error}</Text> : null}
-      {status === 'sent' ? (
-        <Text style={{ color: tokens.success }}>Email de réinitialisation envoyé.</Text>
-      ) : null}
+            {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
+            {sent && <Text style={[styles.success, { color: tokens.success }]}>📧 Email envoyé !</Text>}
 
-      <Pressable
-        style={[styles.button, { backgroundColor: tokens.accent }]}
-        onPress={handleSubmit}
-        disabled={status === 'sending'}
-      >
-        <Text style={styles.buttonText}>{status === 'sending' ? 'Envoi…' : 'Envoyer le lien'}</Text>
-      </Pressable>
-
-      <Pressable onPress={() => navigation.goBack()}>
-        <Text style={{ color: tokens.text2 }}>Retour</Text>
-      </Pressable>
-    </View>
+            <Button title="Envoyer le lien" onPress={handleSubmit} loading={loading} disabled={sent} style={styles.submit} />
+            <Button title="← Retour à la connexion" variant="text" onPress={() => navigation.goBack()} />
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  button: {
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
+  flex: { flex: 1 },
+  container: { flex: 1, padding: 24, justifyContent: 'center' },
+  card: { borderRadius: 28, padding: 24, gap: 14 },
+  cardTitle: { fontSize: 20 },
+  cardSubtitle: { fontSize: 14 },
+  error: { fontSize: 13 },
+  success: { fontSize: 13 },
+  submit: { marginTop: 8 },
 });

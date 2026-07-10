@@ -1,32 +1,81 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ChoiceGrid } from '../../../components/ui/ChoiceGrid';
+import { Button } from '../../../components/ui/Button';
+import { OnboardingStepLayout } from './OnboardingStepLayout';
+import { useOnboarding } from '../../../state/OnboardingContext';
+import { useAuth } from '../../../state/AuthContext';
 import { useTheme } from '../../../theme/ThemeContext';
-import type { AuthStackParamList } from '../../../navigation/types';
+import { saveProfile } from '../../../lib/supabase/profile';
+import type { OnboardingStackParamList } from '../../../navigation/types';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'OnboardingStep3'>;
+type Nav = NativeStackNavigationProp<OnboardingStackParamList, 'OnboardingStep3'>;
 
-export function OnboardingStep3Screen({ navigation }: Props) {
-  const { tokens } = useTheme();
+const DIST_OPTIONS = [
+  { value: '5', icon: '🐢', label: '5 km' },
+  { value: '10', icon: '🏅', label: '10 km' },
+  { value: '20', icon: '💪', label: '20 km' },
+  { value: '30', icon: '🦅', label: '30 km+' },
+];
+
+/** Port de ob-step-3 + finishOnboarding (index.html:2103-2115, 3379-3393). */
+export function OnboardingStep3Screen() {
+  const navigation = useNavigation<Nav>();
+  const { tokens, mode } = useTheme();
+  const { choices, setChoice } = useOnboarding();
+  const { session, refreshProfile } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function finish(level = choices.level, terrain = choices.terrain, dist = choices.dist) {
+    if (!session?.user) return;
+    setLoading(true);
+    const { error: saveError } = await saveProfile(
+      session.user.id,
+      session.user.email || '',
+      level || 'intermediate',
+      terrain || 'mixed',
+      parseInt(dist || '10', 10),
+      mode,
+      session.user.user_metadata?.name
+    );
+    if (saveError) {
+      setError(saveError.message);
+      setLoading(false);
+      return;
+    }
+    await refreshProfile();
+    // RootNavigator détecte needsOnboarding=false et route vers AppTabs automatiquement.
+  }
+
+  function handleFinish() {
+    if (!choices.dist) {
+      setError('Fais un choix');
+      return;
+    }
+    finish();
+  }
+
+  function handleSkip() {
+    finish(choices.level || 'intermediate', choices.terrain || 'mixed', choices.dist || '10');
+  }
+
   return (
-    <View style={[styles.container, { backgroundColor: tokens.bg }]}>
-      <Text style={[styles.title, { color: tokens.text }]}>Onboarding — étape 3/3</Text>
-      <Text style={{ color: tokens.text2 }}>
-        Thème clair/sombre/auto (à venir en Étape 2). Une fois le profil complété, on sera
-        redirigé automatiquement vers l'app.
-      </Text>
-      <Pressable style={[styles.button, { backgroundColor: tokens.accent }]} onPress={() => navigation.popToTop()}>
-        <Text style={styles.buttonText}>Terminer</Text>
-      </Pressable>
-      <Pressable onPress={() => navigation.goBack()}>
-        <Text style={{ color: tokens.text2 }}>Retour</Text>
-      </Pressable>
-    </View>
+    <OnboardingStepLayout step={3} title="Distance habituelle" subtitle="Pour préremplir la distance cible">
+      <ChoiceGrid options={DIST_OPTIONS} value={choices.dist} onSelect={(v) => { setChoice('dist', v); setError(''); }} columns={2} />
+      {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
+      <View style={styles.actions}>
+        <Button title="Commencer 🚀" onPress={handleFinish} loading={loading} />
+        <Button title="← Retour" variant="secondary" onPress={() => navigation.goBack()} disabled={loading} />
+        <Button title="Passer" variant="text" onPress={handleSkip} disabled={loading} />
+      </View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 16 },
-  title: { fontSize: 20, fontWeight: '700' },
-  button: { borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  error: { fontSize: 13, marginTop: 8 },
+  actions: { marginTop: 20, gap: 8 },
 });

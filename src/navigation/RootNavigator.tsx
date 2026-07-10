@@ -6,12 +6,13 @@ import { useAuth } from '../state/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { AppTabs } from './AppTabs';
 import { AuthStack } from './AuthStack';
+import { OnboardingStack } from './OnboardingStack';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, needsOnboarding } = useAuth();
   const { tokens, resolvedScheme } = useTheme();
 
   if (isLoading) {
@@ -36,13 +37,15 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {session ? (
+      {!session ? (
+        <AuthStack />
+      ) : needsOnboarding ? (
+        <OnboardingStack />
+      ) : (
         <Stack.Navigator>
           <Stack.Screen name="AppTabs" component={AppTabs} options={{ headerShown: false }} />
           <Stack.Screen name="Account" component={AccountScreen} options={{ title: 'Compte' }} />
         </Stack.Navigator>
-      ) : (
-        <AuthStack />
       )}
     </NavigationContainer>
   );

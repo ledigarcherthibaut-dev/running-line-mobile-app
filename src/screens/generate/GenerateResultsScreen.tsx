@@ -1,24 +1,92 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { RouteMap } from '../../components/map/RouteMap';
+import { RouteMapHandle } from '../../components/map/RouteMap.types';
+import { RouteResultCard } from '../../components/RouteResultCard';
+import { SaveRouteModal } from '../../components/SaveRouteModal';
 import { useTheme } from '../../theme/ThemeContext';
+import { useGenerate } from '../../state/GenerateContext';
+import { useAuth } from '../../state/AuthContext';
+import { useRoutes } from '../../state/RoutesContext';
+import { useToast } from '../../state/ToastContext';
+import { saveRoute } from '../../lib/supabase/routes';
+import { shareRouteAsGPX } from '../../lib/storage/gpx';
 import type { GenerateStackParamList } from '../../navigation/types';
+import { GeneratedRoute } from '../../types';
 
 type Props = NativeStackScreenProps<GenerateStackParamList, 'GenerateResults'>;
 
-export function GenerateResultsScreen({ navigation }: Props) {
+const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
+
+/** Port du panneau résultats (index.html:96-153, 4348-4373) — cartes de résultats + carte. */
+export function GenerateResultsScreen({}: Props) {
   const { tokens } = useTheme();
+  const { terrain, results } = useGenerate();
+  const { profile } = useAuth();
+  const { refresh: refreshSavedRoutes } = useRoutes();
+  const { showToast } = useToast();
+  const mapRef = useRef<RouteMapHandle>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [saveTarget, setSaveTarget] = useState<GeneratedRoute | null>(null);
+
+  async function handleSaveConfirm(name: string, isFav: boolean, isPublic: boolean) {
+    if (!saveTarget || !profile) return;
+    const { error } = await saveRoute(profile.id, profile.name, saveTarget, name, terrain, isFav, isPublic);
+    if (error) {
+      showToast(error.message, true);
+    } else {
+      await refreshSavedRoutes();
+      showToast(isFav ? `⭐ "${name}" en favori` : `💾 "${name}" sauvegardé`);
+    }
+    setSaveTarget(null);
+  }
+
+  async function handleExport(route: GeneratedRoute) {
+    try {
+      await shareRouteAsGPX(route);
+    } catch (e) {
+      showToast((e as Error).message, true);
+    }
+  }
+
   return (
-    <View style={[styles.container, { backgroundColor: tokens.bg }]}>
-      <Text style={[styles.title, { color: tokens.text }]}>Résultats</Text>
-      <Text style={{ color: tokens.text2 }}>Cartes de résultats + carte (Étape 2)</Text>
-      <Pressable onPress={() => navigation.navigate('RouteDetail', { routeId: 'demo' })}>
-        <Text style={{ color: tokens.accent }}>Voir un parcours (démo nav)</Text>
-      </Pressable>
-    </View>
+    <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
+      <View style={styles.mapArea}>
+        <RouteMap
+          ref={mapRef}
+          initialRegion={DEFAULT_REGION}
+          routes={results.map((r, i) => ({ id: `r${i}`, coords: r.coords, color: r.color || tokens.secondary }))}
+        />
+      </View>
+      <ScrollView contentContainerStyle={styles.list}>
+        {results.map((r, i) => (
+          <RouteResultCard
+            key={i}
+            route={r}
+            terrain={terrain}
+            selected={i === selectedIdx}
+            onSelect={() => setSelectedIdx(i)}
+            onCenter={() => mapRef.current?.fitToCoordinates(r.coords.map((c) => ({ lat: c[1], lng: c[0] })))}
+            onSave={() => setSaveTarget(r)}
+            onExportGpx={() => handleExport(r)}
+          />
+        ))}
+      </ScrollView>
+
+      <SaveRouteModal
+        visible={!!saveTarget}
+        defaultName={saveTarget?.name || ''}
+        onCancel={() => setSaveTarget(null)}
+        onConfirm={handleSaveConfirm}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  title: { fontSize: 20, fontWeight: '700' },
+  flex: { flex: 1 },
+  mapArea: { height: '35%' },
+  list: { padding: 16, gap: 12 },
 });

@@ -1,10 +1,16 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+import { Terrain } from '../types';
+
 export type RouteDetailParams = { routeId: string };
-export type TrailDetailParams = { trailId: string };
+export type TrailDetailParams = { trailId: number; trailName: string };
 
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+};
+
+export type OnboardingStackParamList = {
   OnboardingStep1: undefined;
   OnboardingStep2: undefined;
   OnboardingStep3: undefined;
@@ -16,7 +22,8 @@ export type HomeStackParamList = {
 };
 
 export type GenerateStackParamList = {
-  GenerateScreen: undefined;
+  /** presetKm/presetTerrain : port de quickGenerate() (index.html:3330-3342), venant d'Accueil. */
+  GenerateScreen: { presetKm?: number; presetTerrain?: Terrain } | undefined;
   DrawRoute: undefined;
   GenerateResults: undefined;
   RouteDetail: RouteDetailParams;
@@ -34,10 +41,10 @@ export type ExplorerStackParamList = {
 };
 
 export type AppTabParamList = {
-  Home: undefined;
-  Generate: undefined;
-  MyRoutes: undefined;
-  Explorer: undefined;
+  Home: NavigatorScreenParams<HomeStackParamList>;
+  Generate: NavigatorScreenParams<GenerateStackParamList>;
+  MyRoutes: NavigatorScreenParams<MyRoutesStackParamList>;
+  Explorer: NavigatorScreenParams<ExplorerStackParamList>;
 };
 
 export type RootStackParamList = {
