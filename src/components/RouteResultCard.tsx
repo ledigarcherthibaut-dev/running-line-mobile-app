@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { ElevationChart } from './charts/ElevationChart';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
@@ -41,9 +42,10 @@ export function RouteResultCard({
       <View style={styles.badges}>
         <Text style={[styles.badge, { color: tokens.text2, backgroundColor: tokens.surface2 }]}>{TERRAIN_LABEL[terrain]}</Text>
         {!!route.purity && (
-          <Text style={[styles.badge, { color: purityColor[route.purity.cssClass], backgroundColor: tokens.surface2 }]}>
-            🛣 {route.purity.label}
-          </Text>
+          <View style={[styles.badgeRow, { backgroundColor: tokens.surface2 }]}>
+            <Feather name="navigation" size={10} color={purityColor[route.purity.cssClass]} />
+            <Text style={[styles.badgeText, { color: purityColor[route.purity.cssClass] }]}>{route.purity.label}</Text>
+          </View>
         )}
       </View>
 
@@ -57,10 +59,10 @@ export function RouteResultCard({
       <ElevationChart elevations={route.elevation.elevations} color={route.color || tokens.secondary} />
 
       <View style={styles.actions}>
-        <Button title="🔍 Centrer" variant="secondary" onPress={onCenter} style={styles.actionBtn} />
-        <Button title="💾 Sauver" onPress={onSave} style={styles.actionBtn} />
+        <Button title="Centrer" icon="crosshair" variant="secondary" onPress={onCenter} style={styles.actionBtn} />
+        <Button title="Sauver" icon="save" onPress={onSave} style={styles.actionBtn} />
       </View>
-      <Button title="📲 Exporter / Envoyer (GPX)" variant="secondary" onPress={onExportGpx} />
+      <Button title="Exporter / Envoyer (GPX)" icon="share-2" variant="secondary" onPress={onExportGpx} />
     </Pressable>
   );
 }
@@ -82,6 +84,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 15, flex: 1 },
   badges: { flexDirection: 'row', gap: 6 },
   badge: { fontSize: 10, fontFamily: fonts.mono, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
+  badgeText: { fontSize: 10, fontFamily: fonts.mono },
   statsRow: { flexDirection: 'row', gap: 6 },
   stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 7, alignItems: 'center', borderWidth: 1 },
   statVal: { fontFamily: fonts.mono, fontSize: 14, fontWeight: '700' },

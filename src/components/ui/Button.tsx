@@ -1,13 +1,17 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 
 type Variant = 'primary' | 'secondary' | 'text';
+type FeatherName = keyof typeof Feather.glyphMap;
 
 export function Button({
   title,
   onPress,
   variant = 'primary',
+  icon,
+  iconPosition = 'left',
   loading = false,
   disabled = false,
   style,
@@ -15,6 +19,8 @@ export function Button({
   title: string;
   onPress: () => void;
   variant?: Variant;
+  icon?: FeatherName;
+  iconPosition?: 'left' | 'right';
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -22,6 +28,7 @@ export function Button({
   const { tokens } = useTheme();
   const isPrimary = variant === 'primary';
   const isSecondary = variant === 'secondary';
+  const textColor = isPrimary || isSecondary ? tokens.text : tokens.text2;
 
   return (
     <Pressable
@@ -38,17 +45,21 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? tokens.text : tokens.text2} />
+        <ActivityIndicator color={textColor} />
       ) : (
-        <Text
-          style={[
-            styles.label,
-            { color: isPrimary || isSecondary ? tokens.text : tokens.text2 },
-            variant === 'text' && styles.labelText,
-          ]}
-        >
-          {title}
-        </Text>
+        <>
+          {icon && iconPosition === 'left' && <Feather name={icon} size={16} color={textColor} style={styles.iconLeft} />}
+          <Text
+            style={[
+              styles.label,
+              { color: textColor },
+              variant === 'text' && styles.labelText,
+            ]}
+          >
+            {title}
+          </Text>
+          {icon && iconPosition === 'right' && <Feather name={icon} size={16} color={textColor} style={styles.iconRight} />}
+        </>
       )}
     </Pressable>
   );
@@ -56,6 +67,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
+    flexDirection: 'row',
     height: 54,
     borderRadius: radii.full,
     alignItems: 'center',
@@ -67,4 +79,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   label: { fontSize: 15, fontFamily: fonts.mono, fontWeight: '600', letterSpacing: 0.3, textTransform: 'uppercase' },
   labelText: { fontSize: 13, textTransform: 'none' },
+  iconLeft: { marginRight: 8 },
+  iconRight: { marginLeft: 8 },
 });

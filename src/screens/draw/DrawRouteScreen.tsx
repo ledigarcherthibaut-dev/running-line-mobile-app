@@ -52,11 +52,11 @@ export function DrawRouteScreen({ navigation }: Props) {
         {!!draw.error && <Text style={[styles.error, { color: tokens.danger }]}>{draw.error}</Text>}
 
         <View style={styles.actionsRow}>
-          <Button title="↩ Annuler" variant="secondary" onPress={draw.undo} style={styles.actionBtn} />
-          <Button title="✕ Effacer" variant="secondary" onPress={draw.clear} style={styles.actionBtn} />
+          <Button title="Annuler" icon="corner-up-left" variant="secondary" onPress={draw.undo} style={styles.actionBtn} />
+          <Button title="Effacer" icon="x" variant="secondary" onPress={draw.clear} style={styles.actionBtn} />
         </View>
         <TextField label="Nom du parcours" value={name} onChangeText={setName} placeholder="Mon parcours" />
-        <Button title="✓ Terminer" onPress={handleFinish} />
+        <Button title="Terminer" icon="check" onPress={handleFinish} />
       </View>
     </SafeAreaView>
   );

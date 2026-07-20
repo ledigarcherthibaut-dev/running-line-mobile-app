@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 
 export interface ChoiceOption<T extends string> {
   value: T;
-  icon: string;
+  icon: keyof typeof Feather.glyphMap;
   label: string;
   sub?: string;
 }
@@ -36,7 +37,7 @@ export function ChoiceGrid<T extends string>({
               selected && { borderColor: tokens.text, backgroundColor: tokens.accent },
             ]}
           >
-            <Text style={styles.icon}>{opt.icon}</Text>
+            <Feather name={opt.icon} size={22} color={tokens.text} />
             <Text style={[styles.label, { color: tokens.text }]}>{opt.label}</Text>
             {opt.sub ? <Text style={[styles.sub, { color: tokens.text3 }]}>{opt.sub}</Text> : null}
           </Pressable>
@@ -55,7 +56,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1.5,
   },
-  icon: { fontSize: 22 },
   label: { fontSize: 13, fontFamily: fonts.body, textAlign: 'center' },
   sub: { fontSize: 10, fontFamily: fonts.mono },
 });

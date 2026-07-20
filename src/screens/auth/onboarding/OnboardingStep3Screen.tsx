@@ -14,10 +14,10 @@ import type { OnboardingStackParamList } from '../../../navigation/types';
 type Nav = NativeStackNavigationProp<OnboardingStackParamList, 'OnboardingStep3'>;
 
 const DIST_OPTIONS = [
-  { value: '5', icon: '🐢', label: '5 km' },
-  { value: '10', icon: '🏅', label: '10 km' },
-  { value: '20', icon: '💪', label: '20 km' },
-  { value: '30', icon: '🦅', label: '30 km+' },
+  { value: '5', icon: 'feather' as const, label: '5 km' },
+  { value: '10', icon: 'award' as const, label: '10 km' },
+  { value: '20', icon: 'zap' as const, label: '20 km' },
+  { value: '30', icon: 'star' as const, label: '30 km+' },
 ];
 
 /** Port de ob-step-3 + finishOnboarding (index.html:2103-2115, 3379-3393). */
@@ -67,8 +67,8 @@ export function OnboardingStep3Screen() {
       <ChoiceGrid options={DIST_OPTIONS} value={choices.dist} onSelect={(v) => { setChoice('dist', v); setError(''); }} columns={2} />
       {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
       <View style={styles.actions}>
-        <Button title="Commencer 🚀" onPress={handleFinish} loading={loading} />
-        <Button title="← Retour" variant="secondary" onPress={() => navigation.goBack()} disabled={loading} />
+        <Button title="Commencer" icon="arrow-right" iconPosition="right" onPress={handleFinish} loading={loading} />
+        <Button title="Retour" icon="arrow-left" variant="secondary" onPress={() => navigation.goBack()} disabled={loading} />
         <Button title="Passer" variant="text" onPress={handleSkip} disabled={loading} />
       </View>
     </OnboardingStepLayout>

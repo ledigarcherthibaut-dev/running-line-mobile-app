@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { TextField } from './ui/TextField';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
@@ -34,12 +35,16 @@ export function SaveRouteModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: tokens.surface }]}>
-          <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>💾 Enregistrer le parcours</Text>
+          <View style={styles.titleRow}>
+            <Feather name="save" size={18} color={tokens.text} />
+            <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>Enregistrer le parcours</Text>
+          </View>
           <TextField label="Nom" value={name} onChangeText={setName} placeholder="Ex: Tour de la forêt" />
 
           <Pressable style={styles.checkRow} onPress={() => setIsFav((v) => !v)}>
             <Switch value={isFav} onValueChange={setIsFav} />
-            <Text style={[styles.checkLabel, { color: tokens.text2 }]}>Marquer en favori ⭐</Text>
+            <Feather name="star" size={14} color={tokens.text2} />
+            <Text style={[styles.checkLabel, { color: tokens.text2 }]}>Marquer en favori</Text>
           </Pressable>
 
           <Pressable
@@ -48,7 +53,10 @@ export function SaveRouteModal({
           >
             <Switch value={isPublic} onValueChange={setIsPublic} />
             <View style={styles.publicText}>
-              <Text style={[styles.publicTitle, { color: tokens.text }]}>🌍 Partager à la communauté</Text>
+              <View style={styles.checkRow}>
+                <Feather name="globe" size={14} color={tokens.text} />
+                <Text style={[styles.publicTitle, { color: tokens.text }]}>Partager à la communauté</Text>
+              </View>
               <Text style={[styles.publicSub, { color: tokens.text2 }]}>Visible dans l'explorateur pour tous</Text>
             </View>
           </Pressable>
@@ -66,6 +74,7 @@ export function SaveRouteModal({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   sheet: { borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, padding: 24, gap: 14 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 18 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   checkLabel: { fontSize: 13 },

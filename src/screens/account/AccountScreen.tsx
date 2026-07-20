@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { ChoiceGrid } from '../../components/ui/ChoiceGrid';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
@@ -12,21 +13,37 @@ import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii, ThemeMode } from '../../theme/tokens';
 import { savePhysicalData, updateProfilePreference } from '../../lib/supabase/profile';
 import { signOut, updatePassword } from '../../lib/supabase/auth';
+import { deleteAccountData } from '../../lib/supabase/account';
 import { cancelDailyReminder, getReminderSettings, setDailyReminder } from '../../lib/notifications';
 import { Level, Terrain, UserProfile } from '../../types';
 
+type FeatherName = keyof typeof Feather.glyphMap;
+
 const LEVEL_OPTIONS = [
-  { value: 'beginner' as Level, icon: '🌱', label: 'Débutant' },
-  { value: 'intermediate' as Level, icon: '🏃', label: 'Inter.' },
-  { value: 'advanced' as Level, icon: '⚡', label: 'Avancé' },
+  { value: 'beginner' as Level, icon: 'sunrise' as const, label: 'Débutant' },
+  { value: 'intermediate' as Level, icon: 'activity' as const, label: 'Inter.' },
+  { value: 'advanced' as Level, icon: 'zap' as const, label: 'Avancé' },
 ];
 const TERRAIN_OPTIONS = [
-  { value: 'road' as Terrain, icon: '🛣️', label: 'Route' },
-  { value: 'mixed' as Terrain, icon: '🌿', label: 'Mixte' },
-  { value: 'trail' as Terrain, icon: '🏔️', label: 'Trail' },
-  { value: 'any' as Terrain, icon: '🎲', label: 'Peu importe' },
+  { value: 'road' as Terrain, icon: 'navigation' as const, label: 'Route' },
+  { value: 'mixed' as Terrain, icon: 'git-merge' as const, label: 'Mixte' },
+  { value: 'trail' as Terrain, icon: 'trending-up' as const, label: 'Trail' },
+  { value: 'any' as Terrain, icon: 'shuffle' as const, label: 'Peu importe' },
 ];
-const THEME_LABEL: Record<ThemeMode, string> = { dark: '🌙 Sombre', auto: '⚡ Auto', light: '☀️ Clair' };
+const THEME_LABEL: Record<ThemeMode, string> = { dark: 'Sombre', auto: 'Auto', light: 'Clair' };
+const THEME_ICON: Record<ThemeMode, FeatherName> = { dark: 'moon', auto: 'smartphone', light: 'sun' };
+
+function passwordStrength(pw: string): { label: string; color: 'danger' | 'energy' | 'success' } | null {
+  if (!pw) return null;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (score <= 1) return { label: 'Faible', color: 'danger' };
+  if (score <= 2) return { label: 'Moyen', color: 'energy' };
+  return { label: 'Fort', color: 'success' };
+}
 
 /** Port de screen-account (index.html:2119-2171). */
 export function AccountScreen() {
@@ -37,8 +54,10 @@ export function AccountScreen() {
   const [vma, setVma] = useState(profile?.vma ? String(profile.vma) : '');
   const [fcMax, setFcMax] = useState(profile?.fc_max ? String(profile.fc_max) : '');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPhysical, setSavingPhysical] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState({ hour: 18, minute: 0 });
   const [reminderBusy, setReminderBusy] = useState(false);
@@ -100,6 +119,10 @@ export function AccountScreen() {
       showToast('Mot de passe trop court', true);
       return;
     }
+    if (newPassword !== confirmPassword) {
+      showToast('Les mots de passe ne correspondent pas', true);
+      return;
+    }
     setUpdatingPassword(true);
     const { error } = await updatePassword(newPassword);
     setUpdatingPassword(false);
@@ -108,7 +131,8 @@ export function AccountScreen() {
       return;
     }
     setNewPassword('');
-    showToast('✓ Mot de passe mis à jour');
+    setConfirmPassword('');
+    showToast('Mot de passe mis à jour', false, 3000, 'check');
   }
 
   function confirmLogout() {
@@ -118,7 +142,31 @@ export function AccountScreen() {
     ]);
   }
 
+  function confirmDeleteAccount() {
+    Alert.alert(
+      'Supprimer mon compte',
+      'Tes parcours, notes et ton profil seront supprimés définitivement. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', style: 'destructive', onPress: handleDeleteAccount },
+      ]
+    );
+  }
+
+  async function handleDeleteAccount() {
+    if (!session?.user) return;
+    setDeletingAccount(true);
+    try {
+      await deleteAccountData(session.user.id);
+      await signOut();
+    } catch (e) {
+      showToast((e as Error).message, true);
+      setDeletingAccount(false);
+    }
+  }
+
   const initial = (profile.name?.[0] || session.user.email?.[0] || '?').toUpperCase();
+  const strength = passwordStrength(newPassword);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
@@ -131,7 +179,7 @@ export function AccountScreen() {
 
         <View style={[styles.row, { borderBottomColor: tokens.border }]}>
           <Text style={[styles.rowLabel, { color: tokens.text2 }]}>Thème</Text>
-          <Button title={THEME_LABEL[mode]} variant="secondary" onPress={cycleMode} style={styles.themeBtn} />
+          <Button title={THEME_LABEL[mode]} icon={THEME_ICON[mode]} variant="secondary" onPress={cycleMode} style={styles.themeBtn} />
         </View>
 
         <Section title="Niveau">
@@ -174,12 +222,30 @@ export function AccountScreen() {
 
         <Section title="Modifier le mot de passe">
           <TextField label="Nouveau mot de passe" value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="••••••••" />
+          {strength && (
+            <Text style={[styles.strength, { color: tokens[strength.color] }]}>Robustesse : {strength.label}</Text>
+          )}
+          <TextField label="Confirmer le mot de passe" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="••••••••" />
           <Button title="Mettre à jour" onPress={handleUpdatePassword} loading={updatingPassword} style={styles.updatePwdBtn} />
         </Section>
 
         <View style={[styles.dangerZone, { borderColor: 'rgba(229,62,62,0.3)' }]}>
-          <Text style={[styles.dangerLabel, { color: tokens.danger }]}>⚠️ Zone dangereuse</Text>
-          <Button title="Se déconnecter" variant="secondary" onPress={confirmLogout} style={{ borderColor: 'rgba(229,62,62,0.3)' }} />
+          <View style={styles.dangerLabelRow}>
+            <Feather name="alert-triangle" size={14} color={tokens.danger} />
+            <Text style={[styles.dangerLabel, { color: tokens.danger }]}>Zone dangereuse</Text>
+          </View>
+          <Button title="Se déconnecter" icon="log-out" variant="secondary" onPress={confirmLogout} style={{ borderColor: 'rgba(229,62,62,0.3)' }} />
+          <Button
+            title="Supprimer mon compte"
+            icon="trash-2"
+            variant="secondary"
+            onPress={confirmDeleteAccount}
+            loading={deletingAccount}
+            style={{ borderColor: 'rgba(229,62,62,0.3)' }}
+          />
+          <Text style={[styles.dangerHint, { color: tokens.text3 }]}>
+            Supprime tes parcours, notes et ton profil. Contacte-nous pour la suppression complète de ton compte de connexion.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -213,7 +279,10 @@ const styles = StyleSheet.create({
   physicalField: { flex: 1 },
   saving: { fontSize: 11 },
   reminderTimeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  strength: { fontSize: 11, marginTop: -4 },
   updatePwdBtn: { marginTop: 4 },
   dangerZone: { marginTop: 24, padding: 16, borderRadius: radii.md, borderWidth: 1, gap: 10 },
+  dangerLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dangerLabel: { fontSize: 13 },
+  dangerHint: { fontSize: 11, lineHeight: 15 },
 });

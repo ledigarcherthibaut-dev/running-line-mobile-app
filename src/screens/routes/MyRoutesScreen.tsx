@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { SavedRouteCard } from '../../components/SavedRouteCard';
 import { RateRouteModal } from '../../components/RateRouteModal';
 import { useRoutes } from '../../state/RoutesContext';
@@ -15,14 +16,15 @@ import type { MyRoutesStackParamList } from '../../navigation/types';
 import { SavedRoute } from '../../types';
 
 type Props = NativeStackScreenProps<MyRoutesStackParamList, 'MyRoutesScreen'>;
+type FeatherName = keyof typeof Feather.glyphMap;
 
 type Filter = 'all' | 'fav' | 'trail' | 'road' | 'mixed';
-const FILTERS: { value: Filter; label: string }[] = [
+const FILTERS: { value: Filter; label: string; icon?: FeatherName }[] = [
   { value: 'all', label: 'Tous' },
-  { value: 'fav', label: '⭐ Favoris' },
-  { value: 'trail', label: '🏔️ Trail' },
-  { value: 'road', label: '🛣️ Route' },
-  { value: 'mixed', label: '🌿 Mixte' },
+  { value: 'fav', label: 'Favoris', icon: 'star' },
+  { value: 'trail', label: 'Trail', icon: 'trending-up' },
+  { value: 'road', label: 'Route', icon: 'navigation' },
+  { value: 'mixed', label: 'Mixte', icon: 'git-merge' },
 ];
 
 /** Port de #page-routes (filterRoutes + buildSavedHTML, index.html:2725-2740, 3538-3667). */
@@ -44,7 +46,7 @@ export function MyRoutesScreen({ navigation }: Props) {
     if (!rateTarget || !session?.user) return;
     const { error } = await submitRating(session.user.id, rateTarget.id, score, comment);
     if (error) showToast(error.message, true);
-    else showToast(`⭐ Note ${score}/5 envoyée !`);
+    else showToast(`Note ${score}/5 envoyée !`, false, 3000, 'star');
     setRateTarget(null);
   }
 
@@ -61,6 +63,7 @@ export function MyRoutesScreen({ navigation }: Props) {
               filter === f.value && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
             ]}
           >
+            {f.icon && <Feather name={f.icon} size={12} color={filter === f.value ? tokens.text : tokens.text2} />}
             <Text style={[styles.filterLabel, { color: tokens.text2, fontFamily: fonts.mono }, filter === f.value && { color: tokens.text, fontWeight: '700' }]}>
               {f.label}
             </Text>
@@ -70,7 +73,7 @@ export function MyRoutesScreen({ navigation }: Props) {
 
       {filtered.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🚩</Text>
+          <Feather name="flag" size={40} color={tokens.text3} />
           <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Aucun parcours ici</Text>
           <Text style={[styles.emptySub, { color: tokens.text2 }]}>Génère un parcours et sauvegarde-le pour le retrouver ici.</Text>
         </View>
@@ -107,11 +110,10 @@ export function MyRoutesScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 16, paddingBottom: 8 },
-  filterTab: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radii.full, borderWidth: 1 },
+  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 12 },
   list: { padding: 16, paddingTop: 8, gap: 10 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 32 },
-  emptyIcon: { fontSize: 40 },
   emptyTitle: { fontSize: 16 },
   emptySub: { fontSize: 13, textAlign: 'center' },
 });

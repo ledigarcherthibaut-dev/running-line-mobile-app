@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from './src/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider } from './src/state/AuthContext';
 import { RoutesProvider } from './src/state/RoutesContext';
 import { ToastProvider } from './src/state/ToastContext';
@@ -12,6 +12,12 @@ import { OfflineBanner } from './src/components/OfflineBanner';
 import { fonts } from './src/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
+
+/** Icônes claires sur fond sombre et inversement, alignées sur le thème choisi (pas seulement le système). */
+function ThemedStatusBar() {
+  const { resolvedScheme } = useTheme();
+  return <StatusBar style={resolvedScheme === 'dark' ? 'light' : 'dark'} />;
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -38,7 +44,7 @@ export default function App() {
             <ToastProvider>
               <RootNavigator />
               <OfflineBanner />
-              <StatusBar style="auto" />
+              <ThemedStatusBar />
             </ToastProvider>
           </RoutesProvider>
         </AuthProvider>

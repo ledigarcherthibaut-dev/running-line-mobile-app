@@ -12,10 +12,10 @@ import { Terrain } from '../../../types';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingStep2'>;
 
 const TERRAIN_OPTIONS = [
-  { value: 'road' as Terrain, icon: '🛣️', label: 'Route' },
-  { value: 'mixed' as Terrain, icon: '🌿', label: 'Mixte' },
-  { value: 'trail' as Terrain, icon: '🏔️', label: 'Trail' },
-  { value: 'any' as Terrain, icon: '🎲', label: 'Peu importe' },
+  { value: 'road' as Terrain, icon: 'navigation' as const, label: 'Route' },
+  { value: 'mixed' as Terrain, icon: 'git-merge' as const, label: 'Mixte' },
+  { value: 'trail' as Terrain, icon: 'trending-up' as const, label: 'Trail' },
+  { value: 'any' as Terrain, icon: 'shuffle' as const, label: 'Peu importe' },
 ];
 
 /** Port de ob-step-2 (index.html:2090-2102). */
@@ -42,8 +42,8 @@ export function OnboardingStep2Screen({ navigation }: Props) {
       <ChoiceGrid options={TERRAIN_OPTIONS} value={choices.terrain} onSelect={(v) => { setChoice('terrain', v); setError(''); }} columns={2} />
       {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
       <View style={styles.actions}>
-        <Button title="Suivant →" onPress={handleNext} />
-        <Button title="← Retour" variant="secondary" onPress={() => navigation.goBack()} />
+        <Button title="Suivant" icon="arrow-right" iconPosition="right" onPress={handleNext} />
+        <Button title="Retour" icon="arrow-left" variant="secondary" onPress={() => navigation.goBack()} />
         <Button title="Passer" variant="text" onPress={handleSkip} />
       </View>
     </OnboardingStepLayout>

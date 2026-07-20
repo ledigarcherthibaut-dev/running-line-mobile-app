@@ -20,10 +20,10 @@ import { Terrain } from '../../types';
 type Props = NativeStackScreenProps<GenerateStackParamList, 'GenerateScreen'>;
 
 const TERRAIN_OPTIONS = [
-  { value: 'road' as Terrain, icon: '🛣️', label: 'Route' },
-  { value: 'mixed' as Terrain, icon: '🌿', label: 'Mixte' },
-  { value: 'trail' as Terrain, icon: '🏔️', label: 'Trail' },
-  { value: 'any' as Terrain, icon: '🎲', label: 'Peu importe' },
+  { value: 'road' as Terrain, icon: 'navigation' as const, label: 'Route' },
+  { value: 'mixed' as Terrain, icon: 'git-merge' as const, label: 'Mixte' },
+  { value: 'trail' as Terrain, icon: 'trending-up' as const, label: 'Trail' },
+  { value: 'any' as Terrain, icon: 'shuffle' as const, label: 'Peu importe' },
 ];
 
 /** Port de #page-generate (panneau de config, index.html:456-750). */
@@ -48,7 +48,7 @@ export function GenerateScreen({ navigation, route }: Props) {
     try {
       const c = await getUserLocation();
       setUserCoords(c);
-      showToast('📍 Position détectée');
+      showToast('Position détectée', false, 3000, 'map-pin');
     } catch (e) {
       showToast(e instanceof LocationError ? e.message : (e as Error).message, true);
     }
@@ -125,13 +125,13 @@ export function GenerateScreen({ navigation, route }: Props) {
         />
 
         <TextField label="Départ" value={startText} onChangeText={setStartText} placeholder="Adresse ou ville (vide = position GPS)" />
-        <Button title="📍 Me géolocaliser" variant="secondary" onPress={handleGeolocate} />
+        <Button title="Me géolocaliser" icon="map-pin" variant="secondary" onPress={handleGeolocate} />
         <TextField label="Arrivée (optionnel)" value={endText} onChangeText={setEndText} placeholder="Pour un itinéraire direct A→B" />
 
         {generating && <Text style={[styles.progress, { color: tokens.text2, fontFamily: fonts.mono }]}>{progressMsg}</Text>}
 
-        <Button title="Générer les parcours →" onPress={handleGenerate} loading={generating} />
-        <Button title="✏️ Dessiner manuellement" variant="secondary" onPress={() => navigation.navigate('DrawRoute')} />
+        <Button title="Générer les parcours" icon="arrow-right" iconPosition="right" onPress={handleGenerate} loading={generating} />
+        <Button title="Dessiner manuellement" icon="edit-3" variant="secondary" onPress={() => navigation.navigate('DrawRoute')} />
       </ScrollView>
     </SafeAreaView>
   );

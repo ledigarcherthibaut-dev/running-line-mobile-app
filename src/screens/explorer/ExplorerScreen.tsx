@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
@@ -13,8 +14,10 @@ import type { ExplorerStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<ExplorerStackParamList, 'ExplorerScreen'>;
 type Tab = 'trails' | 'community';
 type TrailFilter = 'all' | TrailType;
+type FeatherName = keyof typeof Feather.glyphMap;
 
-const TRAIL_BADGE: Record<TrailType, string> = { foot: '🥾', bicycle: '🚴', mtb: '⛰️' };
+const TRAIL_BADGE: Record<TrailType, FeatherName> = { foot: 'compass', bicycle: 'wind', mtb: 'trending-up' };
+const TRAIL_FILTER_LABEL: Record<TrailType, string> = { foot: 'Pédestre', bicycle: 'Vélo', mtb: 'VTT' };
 
 /** Port de #page-explorer (index.html:751-786) — onglets Sentiers OSM / Communauté. */
 export function ExplorerScreen({ navigation }: Props) {
@@ -67,18 +70,18 @@ export function ExplorerScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <View style={styles.tabRow}>
-        <TabButton label="🥾 Sentiers" active={tab === 'trails'} onPress={() => switchTab('trails')} />
-        <TabButton label="🌍 Communauté" active={tab === 'community'} onPress={() => switchTab('community')} />
+        <TabButton icon="compass" label="Sentiers" active={tab === 'trails'} onPress={() => switchTab('trails')} />
+        <TabButton icon="globe" label="Communauté" active={tab === 'community'} onPress={() => switchTab('community')} />
       </View>
 
       {tab === 'trails' ? (
         <View style={styles.flex}>
           {trails.length === 0 && !loadingTrails ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🥾</Text>
+              <Feather name="compass" size={36} color={tokens.text3} />
               <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Sentiers autour de toi</Text>
               <Text style={[styles.emptySub, { color: tokens.text2 }]}>Localise-toi pour découvrir les sentiers OSM dans un rayon de 25km.</Text>
-              <Button title="📍 Chercher autour de moi" onPress={loadTrails} loading={loadingTrails} />
+              <Button title="Chercher autour de moi" icon="map-pin" onPress={loadTrails} loading={loadingTrails} />
             </View>
           ) : (
             <>
@@ -93,8 +96,9 @@ export function ExplorerScreen({ navigation }: Props) {
                       trailFilter === f && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
                     ]}
                   >
+                    {f !== 'all' && <Feather name={TRAIL_BADGE[f]} size={12} color={trailFilter === f ? tokens.text : tokens.text2} />}
                     <Text style={[styles.filterLabel, { color: tokens.text2, fontFamily: fonts.mono }, trailFilter === f && { color: tokens.text, fontWeight: '700' }]}>
-                      {f === 'all' ? 'Tous' : `${TRAIL_BADGE[f]} ${f === 'foot' ? 'Pédestre' : f === 'bicycle' ? 'Vélo' : 'VTT'}`}
+                      {f === 'all' ? 'Tous' : TRAIL_FILTER_LABEL[f]}
                     </Text>
                   </Pressable>
                 ))}
@@ -111,12 +115,12 @@ export function ExplorerScreen({ navigation }: Props) {
                     style={[styles.trailCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                     onPress={() => navigation.navigate('TrailDetail', { trailId: item.id, trailName: item.name })}
                   >
-                    <Text style={styles.trailIcon}>{TRAIL_BADGE[item.type]}</Text>
+                    <Feather name={TRAIL_BADGE[item.type]} size={20} color={tokens.text2} />
                     <View style={styles.trailInfo}>
                       <Text style={[styles.trailName, { color: tokens.text, fontFamily: fonts.display }]}>{item.name}</Text>
                       <Text style={[styles.trailMeta, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.distance || '?'} km · {item.network || item.type}</Text>
                     </View>
-                    <Text style={[styles.trailArrow, { color: tokens.text3 }]}>›</Text>
+                    <Feather name="chevron-right" size={18} color={tokens.text3} />
                   </Pressable>
                 )}
               />
@@ -135,7 +139,7 @@ export function ExplorerScreen({ navigation }: Props) {
             ListEmptyComponent={
               !loadingCommunity ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyIcon}>🌍</Text>
+                  <Feather name="globe" size={36} color={tokens.text3} />
                   <Text style={[styles.emptySub, { color: tokens.text2 }]}>Aucun parcours partagé. Sois le premier !</Text>
                 </View>
               ) : null
@@ -159,9 +163,12 @@ export function ExplorerScreen({ navigation }: Props) {
                   <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
                   <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
                 </View>
-                <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
-                  {item.ratingCount > 0 ? `⭐ ${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
-                </Text>
+                <View style={styles.communityRatingRow}>
+                  <Feather name="star" size={11} color={tokens.fav} />
+                  <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
+                    {item.ratingCount > 0 ? `${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
+                  </Text>
+                </View>
               </Pressable>
             )}
           />
@@ -171,13 +178,14 @@ export function ExplorerScreen({ navigation }: Props) {
   );
 }
 
-function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function TabButton({ icon, label, active, onPress }: { icon: FeatherName; label: string; active: boolean; onPress: () => void }) {
   const { tokens } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={[styles.tabBtn, { backgroundColor: tokens.surface2 }, active && { backgroundColor: tokens.accent }]}
     >
+      <Feather name={icon} size={14} color={active ? tokens.text : tokens.text2} />
       <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.text, fontWeight: '700' }]}>{label}</Text>
     </Pressable>
   );
@@ -186,23 +194,20 @@ function TabButton({ label, active, onPress }: { label: string; active: boolean;
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   tabRow: { flexDirection: 'row', gap: 8, padding: 16 },
-  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: radii.full, alignItems: 'center' },
+  tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: radii.full },
   tabLabel: { fontSize: 13 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
-  filterTab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
+  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 11 },
   error: { fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
   list: { padding: 16, paddingTop: 0, gap: 10 },
   empty: { alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
-  emptyIcon: { fontSize: 36 },
   emptyTitle: { fontSize: 16 },
   emptySub: { fontSize: 13, textAlign: 'center' },
   trailCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, padding: 12, borderWidth: 1 },
-  trailIcon: { fontSize: 20 },
   trailInfo: { flex: 1 },
   trailName: { fontSize: 14 },
   trailMeta: { fontSize: 11 },
-  trailArrow: { fontSize: 18 },
   communityCard: { borderRadius: radii.md, padding: 14, gap: 8, borderWidth: 1 },
   communityHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   communityAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
@@ -211,5 +216,6 @@ const styles = StyleSheet.create({
   communityUser: { fontSize: 11 },
   communityMeta: { flexDirection: 'row', gap: 12 },
   communityStat: { fontSize: 11 },
+  communityRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   communityRating: { fontSize: 11 },
 });

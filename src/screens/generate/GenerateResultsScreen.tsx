@@ -38,7 +38,7 @@ export function GenerateResultsScreen({}: Props) {
       showToast(error.message, true);
     } else {
       await refreshSavedRoutes();
-      showToast(isFav ? `⭐ "${name}" en favori` : `💾 "${name}" sauvegardé`);
+      showToast(isFav ? `"${name}" en favori` : `"${name}" sauvegardé`, false, 3000, isFav ? 'star' : 'save');
     }
     setSaveTarget(null);
   }

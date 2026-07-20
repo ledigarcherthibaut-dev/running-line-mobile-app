@@ -1,5 +1,5 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
 import { RoutePreviewSvg } from './routePreview/RoutePreviewSvg';
@@ -39,7 +39,7 @@ export function SavedRouteCard({
         <View style={[styles.colorBar, { backgroundColor: tokens.secondary }]} />
         {route.isFav && (
           <View style={styles.favBadge}>
-            <Ionicons name="star" size={10} color={tokens.fav} />
+            <Feather name="star" size={10} color={tokens.fav} />
             <Text style={styles.favBadgeText}>Favori</Text>
           </View>
         )}
@@ -55,11 +55,11 @@ export function SavedRouteCard({
         <Text style={[styles.meta, { color: tokens.text3 }]}>{route.terrain || 'mixte'} · sauvegardé</Text>
 
         <View style={styles.actions}>
-          <ActionBtn icon={route.isFav ? 'star' : 'star-outline'} active={route.isFav} onPress={onToggleFavorite} />
-          <ActionBtn icon="chatbox-ellipses-outline" onPress={onRate} />
-          <ActionBtn icon={route.isPublic ? 'earth' : 'lock-closed-outline'} active={route.isPublic} onPress={onTogglePublic} />
-          <ActionBtn icon="download-outline" onPress={onExportGpx} />
-          <ActionBtn icon="trash-outline" danger onPress={confirmDelete} />
+          <ActionBtn icon="star" active={route.isFav} onPress={onToggleFavorite} />
+          <ActionBtn icon="message-circle" onPress={onRate} />
+          <ActionBtn icon={route.isPublic ? 'globe' : 'lock'} active={route.isPublic} onPress={onTogglePublic} />
+          <ActionBtn icon="download" onPress={onExportGpx} />
+          <ActionBtn icon="trash-2" danger onPress={confirmDelete} />
         </View>
       </View>
     </Pressable>
@@ -72,7 +72,7 @@ function ActionBtn({
   danger,
   onPress,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: keyof typeof Feather.glyphMap;
   active?: boolean;
   danger?: boolean;
   onPress: () => void;
@@ -88,7 +88,7 @@ function ActionBtn({
       ]}
       hitSlop={4}
     >
-      <Ionicons name={icon} size={18} color={danger ? tokens.danger : active ? tokens.text : tokens.text2} />
+      <Feather name={icon} size={18} color={danger ? tokens.danger : active ? tokens.text : tokens.text2} />
     </Pressable>
   );
 }

@@ -49,7 +49,7 @@ export async function setDailyReminder(hour: number, minute: number): Promise<vo
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Running Line 🏃',
+      title: 'Running Line',
       body: "C'est l'heure de ta sortie du jour !",
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: 'reminders' },

@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { signUp } from '../../lib/supabase/auth';
@@ -10,11 +11,12 @@ import { fonts, radii, ThemeMode } from '../../theme/tokens';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+type FeatherName = keyof typeof Feather.glyphMap;
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
-  { value: 'dark', label: 'Sombre', icon: '🌙' },
-  { value: 'auto', label: 'Auto', icon: '⚡' },
-  { value: 'light', label: 'Clair', icon: '☀️' },
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: FeatherName }[] = [
+  { value: 'dark', label: 'Sombre', icon: 'moon' },
+  { value: 'auto', label: 'Auto', icon: 'smartphone' },
+  { value: 'light', label: 'Clair', icon: 'sun' },
 ];
 
 /** Port de doRegister (index.html:3140-3152) + choix du thème initial (regThemeChoice). */
@@ -86,7 +88,7 @@ export function RegisterScreen({ navigation }: Props) {
                     themeChoice === opt.value && { borderColor: tokens.text, backgroundColor: tokens.accent },
                   ]}
                 >
-                  <Text style={styles.themeIcon}>{opt.icon}</Text>
+                  <Feather name={opt.icon} size={20} color={tokens.text} />
                   <Text style={[styles.themeLabel, { color: tokens.text }]}>{opt.label}</Text>
                 </Pressable>
               ))}
@@ -117,7 +119,6 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 11, letterSpacing: 0.5, marginTop: 4 },
   themeRow: { flexDirection: 'row', gap: 10 },
   themeCard: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 14, borderRadius: radii.md, borderWidth: 1.5 },
-  themeIcon: { fontSize: 20 },
   themeLabel: { fontSize: 13 },
   error: { fontSize: 13 },
   submit: { marginTop: 8 },

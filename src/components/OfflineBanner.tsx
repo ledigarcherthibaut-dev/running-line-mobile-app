@@ -1,5 +1,6 @@
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
@@ -12,12 +13,16 @@ export function OfflineBanner() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: tokens.text }]} pointerEvents="none">
-      <Text style={[styles.text, { color: tokens.bg }]}>📡 Hors ligne — dernières données affichées</Text>
+      <View style={styles.row}>
+        <Feather name="wifi-off" size={12} color={tokens.bg} />
+        <Text style={[styles.text, { color: tokens.bg }]}>Hors ligne — dernières données affichées</Text>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, alignItems: 'center' },
-  text: { fontSize: 11, fontFamily: fonts.mono, paddingVertical: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  text: { fontSize: 11, fontFamily: fonts.mono },
 });

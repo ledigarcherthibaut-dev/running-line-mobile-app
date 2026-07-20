@@ -60,7 +60,7 @@ export function TrailDetailScreen() {
     if (saveError) showToast(saveError.message, true);
     else {
       await refresh();
-      showToast('💾 Ajouté à tes parcours');
+      showToast('Ajouté à tes parcours', false, 3000, 'save');
     }
   }
 
@@ -88,8 +88,8 @@ export function TrailDetailScreen() {
         </View>
         <ElevationChart elevations={route.elevation.elevations} color={tokens.sky} height={50} />
         <View style={styles.actions}>
-          <Button title="📲 Exporter GPX" variant="secondary" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
-          <Button title="💾 Sauvegarder" onPress={handleSave} style={styles.actionBtn} />
+          <Button title="Exporter GPX" icon="share-2" variant="secondary" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Sauvegarder" icon="save" onPress={handleSave} style={styles.actionBtn} />
         </View>
       </ScrollView>
     </SafeAreaView>

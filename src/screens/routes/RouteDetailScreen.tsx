@@ -62,7 +62,7 @@ export function RouteDetailScreen() {
     if (error) showToast(error.message, true);
     else {
       await refresh();
-      showToast('💾 Ajouté à tes parcours');
+      showToast('Ajouté à tes parcours', false, 3000, 'save');
     }
   }
 
@@ -70,7 +70,7 @@ export function RouteDetailScreen() {
     if (!route || !session?.user) return;
     const { error } = await submitRating(session.user.id, route.id, score, comment);
     if (error) showToast(error.message, true);
-    else showToast(`⭐ Note ${score}/5 envoyée !`);
+    else showToast(`Note ${score}/5 envoyée !`, false, 3000, 'star');
     setRateVisible(false);
   }
 
@@ -106,27 +106,29 @@ export function RouteDetailScreen() {
         <ElevationChart elevations={route.elevation.elevations} color={tokens.secondary} height={50} />
 
         <View style={styles.actions}>
-          <Button title="⭐ Noter" variant="secondary" onPress={() => setRateVisible(true)} style={styles.actionBtn} />
-          <Button title="📲 Exporter GPX" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Noter" icon="star" variant="secondary" onPress={() => setRateVisible(true)} style={styles.actionBtn} />
+          <Button title="Exporter GPX" icon="share-2" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
         </View>
 
         {owned ? (
           <View style={styles.actions}>
             <Button
-              title={owned.isFav ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
+              title={owned.isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              icon="heart"
               variant="secondary"
               onPress={() => toggleFavorite(owned.id)}
               style={styles.actionBtn}
             />
             <Button
-              title={owned.isPublic ? '🌍 Rendre privé' : '🌍 Partager'}
+              title={owned.isPublic ? 'Rendre privé' : 'Partager'}
+              icon={owned.isPublic ? 'lock' : 'globe'}
               variant="secondary"
               onPress={() => togglePublic(owned.id)}
               style={styles.actionBtn}
             />
           </View>
         ) : (
-          <Button title="💾 Sauvegarder dans mes parcours" onPress={handleSaveToMine} />
+          <Button title="Sauvegarder dans mes parcours" icon="save" onPress={handleSaveToMine} />
         )}
       </ScrollView>
 

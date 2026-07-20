@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { ExplorerStack } from './ExplorerStack';
 import { GenerateStack } from './GenerateStack';
@@ -9,12 +9,12 @@ import type { AppTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: IoniconName }> = {
-  Home: { active: 'home', inactive: 'home-outline' },
-  Generate: { active: 'flash', inactive: 'flash-outline' },
-  MyRoutes: { active: 'map', inactive: 'map-outline' },
-  Explorer: { active: 'compass', inactive: 'compass-outline' },
+type FeatherName = keyof typeof Feather.glyphMap;
+const TAB_ICONS: Record<keyof AppTabParamList, FeatherName> = {
+  Home: 'home',
+  Generate: 'zap',
+  MyRoutes: 'map',
+  Explorer: 'compass',
 };
 
 export function AppTabs() {
@@ -26,10 +26,9 @@ export function AppTabs() {
         tabBarActiveTintColor: tokens.accent,
         tabBarInactiveTintColor: tokens.text3,
         tabBarStyle: { backgroundColor: tokens.surface, borderTopColor: tokens.border2 },
-        tabBarIcon: ({ focused, color, size }) => {
-          const icons = TAB_ICONS[route.name as keyof AppTabParamList];
-          return <Ionicons name={focused ? icons.active : icons.inactive} size={size} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => (
+          <Feather name={TAB_ICONS[route.name as keyof AppTabParamList]} size={size} color={color} />
+        ),
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} options={{ title: 'Accueil' }} />
