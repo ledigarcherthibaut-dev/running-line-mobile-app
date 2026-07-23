@@ -51,6 +51,10 @@ export function DrawRouteScreen({ navigation }: Props) {
         {draw.routing && <Text style={[styles.hint, { color: tokens.text3, fontFamily: fonts.mono }]}>Calcul du segment…</Text>}
         {!!draw.error && <Text style={[styles.error, { color: tokens.danger }]}>{draw.error}</Text>}
 
+        {draw.points.length >= 2 && (
+          <Button title="Boucler jusqu'au départ" icon="repeat" variant="secondary" onPress={draw.closeLoop} loading={draw.routing} />
+        )}
+
         <View style={styles.actionsRow}>
           <Button title="Annuler" icon="corner-up-left" variant="secondary" onPress={draw.undo} style={styles.actionBtn} />
           <Button title="Effacer" icon="x" variant="secondary" onPress={draw.clear} style={styles.actionBtn} />

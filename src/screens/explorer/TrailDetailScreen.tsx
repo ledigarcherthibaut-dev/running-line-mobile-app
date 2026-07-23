@@ -3,6 +3,7 @@ import { useRoute } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { ElevationChart } from '../../components/charts/ElevationChart';
@@ -16,6 +17,7 @@ import { useToast } from '../../state/ToastContext';
 import { useGarminExport } from '../../hooks/useGarminExport';
 import { fetchTrailGeometry } from '../../lib/api/overpass';
 import { analyzeElevation } from '../../lib/routing/geo';
+import { estimateDurationLabel } from '../../lib/routing/pace';
 import { saveRoute } from '../../lib/supabase/routes';
 import type { TrailDetailParams } from '../../navigation/types';
 import { GeneratedRoute } from '../../types';
@@ -76,6 +78,8 @@ export function TrailDetailScreen() {
     );
   }
 
+  const duration = estimateDurationLabel(route.distKm, profile?.vma);
+
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <View style={styles.mapArea}>
@@ -83,6 +87,12 @@ export function TrailDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{route.name}</Text>
+        {!!duration && (
+          <View style={styles.durationRow}>
+            <Feather name="clock" size={11} color={tokens.text3} />
+            <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
+          </View>
+        )}
         <View style={styles.statsRow}>
           <Stat value={route.distKm.toFixed(1)} label="km" />
           <Stat value={`+${route.elevation.totalAscent}`} label="D+ m" />
@@ -115,6 +125,8 @@ const styles = StyleSheet.create({
   mapArea: { height: '35%' },
   body: { padding: 16, gap: 12 },
   name: { fontSize: 20 },
+  durationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -4 },
+  durationText: { fontSize: 11 },
   statsRow: { flexDirection: 'row', gap: 6 },
   stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 8, alignItems: 'center', borderWidth: 1 },
   statVal: { fontSize: 14, fontWeight: '700' },

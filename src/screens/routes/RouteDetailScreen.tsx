@@ -1,12 +1,14 @@
 import type { RouteProp } from '@react-navigation/native';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
 import { RateRouteModal } from '../../components/RateRouteModal';
 import { GarminExportModal } from '../../components/GarminExportModal';
 import { useTheme } from '../../theme/ThemeContext';
@@ -15,6 +17,7 @@ import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
 import { useGarminExport } from '../../hooks/useGarminExport';
+import { estimateDurationLabel } from '../../lib/routing/pace';
 import { fetchCommunityRouteDetail, saveRoute, submitRating } from '../../lib/supabase/routes';
 import type { RouteDetailParams } from '../../navigation/types';
 import { SavedRoute } from '../../types';
@@ -25,14 +28,18 @@ const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longi
 /** Détail d'un parcours possédé (Mes parcours) ou communautaire (Explorer) — même écran, deux sources de données. */
 export function RouteDetailScreen() {
   const { tokens } = useTheme();
+  const navigation = useNavigation();
   const { params } = useRoute<RouteDetailRouteProp>();
   const { session, profile } = useAuth();
-  const { savedRoutes, toggleFavorite, togglePublic, remove, refresh } = useRoutes();
+  const { savedRoutes, toggleFavorite, togglePublic, rename, remove, refresh } = useRoutes();
   const { showToast } = useToast();
   const mapRef = useRef<RouteMapHandle>(null);
   const [communityRoute, setCommunityRoute] = useState<SavedRoute | null>(null);
   const [loading, setLoading] = useState(false);
   const [rateVisible, setRateVisible] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [renaming, setRenaming] = useState(false);
   const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
   const owned = savedRoutes.find((r) => r.id === params.routeId);
@@ -76,6 +83,45 @@ export function RouteDetailScreen() {
     setRateVisible(false);
   }
 
+  function startRename() {
+    if (!owned) return;
+    setNameInput(owned.name);
+    setEditingName(true);
+  }
+
+  async function handleRename() {
+    if (!owned) return;
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === owned.name) {
+      setEditingName(false);
+      return;
+    }
+    setRenaming(true);
+    try {
+      await rename(owned.id, trimmed);
+      setEditingName(false);
+    } catch (e) {
+      showToast((e as Error).message, true);
+    } finally {
+      setRenaming(false);
+    }
+  }
+
+  function confirmDelete() {
+    if (!owned) return;
+    Alert.alert('Supprimer ce parcours ?', owned.name, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          await remove(owned.id);
+          navigation.goBack();
+        },
+      },
+    ]);
+  }
+
   if (loading || !route) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
@@ -85,6 +131,8 @@ export function RouteDetailScreen() {
       </SafeAreaView>
     );
   }
+
+  const duration = estimateDurationLabel(route.distKm, profile?.vma);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
@@ -96,7 +144,29 @@ export function RouteDetailScreen() {
         />
       </View>
       <ScrollView contentContainerStyle={styles.body}>
-        <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{route.name}</Text>
+        {editingName ? (
+          <View style={styles.renameRow}>
+            <View style={styles.renameField}>
+              <TextField label="Nom" value={nameInput} onChangeText={setNameInput} autoFocus />
+            </View>
+            <Button title="OK" icon="check" onPress={handleRename} loading={renaming} style={styles.renameBtn} />
+          </View>
+        ) : (
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{route.name}</Text>
+            {owned && (
+              <Pressable onPress={startRename} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renommer ce parcours">
+                <Feather name="edit-2" size={16} color={tokens.text3} />
+              </Pressable>
+            )}
+          </View>
+        )}
+        {!!duration && (
+          <View style={styles.durationRow}>
+            <Feather name="clock" size={11} color={tokens.text3} />
+            <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
+          </View>
+        )}
 
         <View style={styles.statsRow}>
           <Stat value={route.distKm.toFixed(1)} label="km" />
@@ -113,22 +183,25 @@ export function RouteDetailScreen() {
         </View>
 
         {owned ? (
-          <View style={styles.actions}>
-            <Button
-              title={owned.isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-              icon="heart"
-              variant="secondary"
-              onPress={() => toggleFavorite(owned.id)}
-              style={styles.actionBtn}
-            />
-            <Button
-              title={owned.isPublic ? 'Rendre privé' : 'Partager'}
-              icon={owned.isPublic ? 'lock' : 'globe'}
-              variant="secondary"
-              onPress={() => togglePublic(owned.id)}
-              style={styles.actionBtn}
-            />
-          </View>
+          <>
+            <View style={styles.actions}>
+              <Button
+                title={owned.isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                icon="heart"
+                variant="secondary"
+                onPress={() => toggleFavorite(owned.id)}
+                style={styles.actionBtn}
+              />
+              <Button
+                title={owned.isPublic ? 'Rendre privé' : 'Partager'}
+                icon={owned.isPublic ? 'lock' : 'globe'}
+                variant="secondary"
+                onPress={() => togglePublic(owned.id)}
+                style={styles.actionBtn}
+              />
+            </View>
+            <Button title="Supprimer ce parcours" icon="trash-2" variant="secondary" onPress={confirmDelete} style={{ borderColor: 'rgba(229,62,62,0.3)' }} />
+          </>
         ) : (
           <Button title="Sauvegarder dans mes parcours" icon="save" onPress={handleSaveToMine} />
         )}
@@ -155,7 +228,13 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   mapArea: { height: '35%' },
   body: { padding: 16, gap: 12 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   name: { fontSize: 20 },
+  renameRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  renameField: { flex: 1 },
+  renameBtn: { height: 50 },
+  durationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -6 },
+  durationText: { fontSize: 11 },
   statsRow: { flexDirection: 'row', gap: 6 },
   stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 8, alignItems: 'center', borderWidth: 1 },
   statVal: { fontSize: 14, fontWeight: '700' },

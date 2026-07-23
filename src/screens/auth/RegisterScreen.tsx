@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { signUp } from '../../lib/supabase/auth';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii, ThemeMode } from '../../theme/tokens';
+import { passwordStrength } from '../../lib/passwordStrength';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -28,6 +29,7 @@ export function RegisterScreen({ navigation }: Props) {
   const [themeChoice, setThemeChoice] = useState<ThemeMode>('auto');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const strength = passwordStrength(password);
 
   async function handleRegister() {
     setError('');
@@ -75,6 +77,9 @@ export function RegisterScreen({ navigation }: Props) {
               secureTextEntry
               autoComplete="password-new"
             />
+            {strength && (
+              <Text style={[styles.strength, { color: tokens[strength.color] }]}>Robustesse : {strength.label}</Text>
+            )}
 
             <Text style={[styles.sectionLabel, { color: tokens.text3, fontFamily: fonts.mono }]}>THÈME</Text>
             <View style={styles.themeRow}>
@@ -116,6 +121,7 @@ const styles = StyleSheet.create({
   card: { borderRadius: 28, padding: 24, gap: 14 },
   cardTitle: { fontSize: 22 },
   cardSubtitle: { fontSize: 14, marginBottom: 6 },
+  strength: { fontSize: 11, marginTop: -4 },
   sectionLabel: { fontSize: 11, letterSpacing: 0.5, marginTop: 4 },
   themeRow: { flexDirection: 'row', gap: 10 },
   themeCard: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 14, borderRadius: radii.md, borderWidth: 1.5 },

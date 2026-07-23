@@ -3,7 +3,9 @@ import { Feather } from '@expo/vector-icons';
 import { ElevationChart } from './charts/ElevationChart';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../state/AuthContext';
 import { radii, fonts } from '../theme/tokens';
+import { estimateDurationLabel } from '../lib/routing/pace';
 import { GeneratedRoute, Terrain } from '../types';
 
 const TERRAIN_LABEL: Record<Terrain, string> = { trail: 'Trail pur', road: 'Route', mixed: 'Mixte', any: 'Mixte' };
@@ -13,6 +15,7 @@ export function RouteResultCard({
   route,
   terrain,
   selected,
+  recommended,
   onSelect,
   onCenter,
   onSave,
@@ -21,13 +24,16 @@ export function RouteResultCard({
   route: GeneratedRoute;
   terrain: Terrain;
   selected: boolean;
+  recommended?: boolean;
   onSelect: () => void;
   onCenter: () => void;
   onSave: () => void;
   onExportGpx: () => void;
 }) {
   const { tokens } = useTheme();
+  const { profile } = useAuth();
   const purityColor = { good: tokens.success, warn: tokens.energy, bad: tokens.danger };
+  const duration = estimateDurationLabel(route.distKm, profile?.vma);
 
   return (
     <Pressable
@@ -40,6 +46,12 @@ export function RouteResultCard({
       </View>
 
       <View style={styles.badges}>
+        {recommended && (
+          <View style={[styles.badgeRow, { backgroundColor: tokens.accentDim }]}>
+            <Feather name="award" size={10} color={tokens.text} />
+            <Text style={[styles.badgeText, { color: tokens.text }]}>Recommandé</Text>
+          </View>
+        )}
         <Text style={[styles.badge, { color: tokens.text2, backgroundColor: tokens.surface2 }]}>{TERRAIN_LABEL[terrain]}</Text>
         {!!route.purity && (
           <View style={[styles.badgeRow, { backgroundColor: tokens.surface2 }]}>
@@ -48,6 +60,12 @@ export function RouteResultCard({
           </View>
         )}
       </View>
+      {duration && (
+        <View style={styles.durationRow}>
+          <Feather name="clock" size={11} color={tokens.text3} />
+          <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
+        </View>
+      )}
 
       <View style={styles.statsRow}>
         <Stat value={route.distKm.toFixed(1)} label="km" />
@@ -86,6 +104,8 @@ const styles = StyleSheet.create({
   badge: { fontSize: 10, fontFamily: fonts.mono, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
   badgeText: { fontSize: 10, fontFamily: fonts.mono },
+  durationRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  durationText: { fontSize: 11 },
   statsRow: { flexDirection: 'row', gap: 6 },
   stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 7, alignItems: 'center', borderWidth: 1 },
   statVal: { fontFamily: fonts.mono, fontSize: 14, fontWeight: '700' },

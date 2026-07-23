@@ -28,6 +28,11 @@ const FILTERS: { value: Filter; label: string; icon?: FeatherName }[] = [
   { value: 'mixed', label: 'Mixte', icon: 'git-merge' },
 ];
 
+type SortMode = 'recent' | 'distanceAsc' | 'distanceDesc';
+const SORT_NEXT: Record<SortMode, SortMode> = { recent: 'distanceAsc', distanceAsc: 'distanceDesc', distanceDesc: 'recent' };
+const SORT_LABEL: Record<SortMode, string> = { recent: 'Récents', distanceAsc: 'Distance ↑', distanceDesc: 'Distance ↓' };
+const SORT_ICON: Record<SortMode, FeatherName> = { recent: 'clock', distanceAsc: 'arrow-up', distanceDesc: 'arrow-down' };
+
 /** Port de #page-routes (filterRoutes + buildSavedHTML, index.html:2725-2740, 3538-3667). */
 export function MyRoutesScreen({ navigation }: Props) {
   const { tokens } = useTheme();
@@ -35,6 +40,7 @@ export function MyRoutesScreen({ navigation }: Props) {
   const { savedRoutes, loading, refresh, toggleFavorite, togglePublic, remove } = useRoutes();
   const { showToast } = useToast();
   const [filter, setFilter] = useState<Filter>('all');
+  const [sortMode, setSortMode] = useState<SortMode>('recent');
   const [rateTarget, setRateTarget] = useState<SavedRoute | null>(null);
   const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
@@ -43,6 +49,9 @@ export function MyRoutesScreen({ navigation }: Props) {
     if (filter === 'fav') return r.isFav;
     return r.terrain === filter;
   });
+  if (sortMode !== 'recent') {
+    filtered.sort((a, b) => (sortMode === 'distanceAsc' ? a.distKm - b.distKm : b.distKm - a.distKm));
+  }
 
   async function handleRate(score: number, comment: string) {
     if (!rateTarget || !session?.user) return;
@@ -72,6 +81,18 @@ export function MyRoutesScreen({ navigation }: Props) {
           </Pressable>
         ))}
       </View>
+
+      {filtered.length > 0 && (
+        <Pressable
+          onPress={() => setSortMode(SORT_NEXT[sortMode])}
+          style={styles.sortBtn}
+          accessibilityRole="button"
+          accessibilityLabel={`Trier par ${SORT_LABEL[sortMode]}`}
+        >
+          <Feather name={SORT_ICON[sortMode]} size={12} color={tokens.text2} />
+          <Text style={[styles.sortLabel, { color: tokens.text2, fontFamily: fonts.mono }]}>Trier : {SORT_LABEL[sortMode]}</Text>
+        </Pressable>
+      )}
 
       {filtered.length === 0 ? (
         <View style={styles.empty}>
@@ -115,6 +136,8 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 16, paddingBottom: 8 },
   filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 12 },
+  sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-end', paddingHorizontal: 16, marginBottom: 6 },
+  sortLabel: { fontSize: 11 },
   list: { padding: 16, paddingTop: 8, gap: 10 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 32 },
   emptyTitle: { fontSize: 16 },

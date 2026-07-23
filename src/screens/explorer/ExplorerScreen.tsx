@@ -10,14 +10,23 @@ import { getUserLocation, LocationError } from '../../lib/location/location';
 import { fetchNearbyTrails, OSMTrail, TrailType } from '../../lib/api/overpass';
 import { fetchCommunityRoutes, CommunityRoute } from '../../lib/supabase/routes';
 import type { ExplorerStackParamList } from '../../navigation/types';
+import { Terrain } from '../../types';
 
 type Props = NativeStackScreenProps<ExplorerStackParamList, 'ExplorerScreen'>;
 type Tab = 'trails' | 'community';
 type TrailFilter = 'all' | TrailType;
+type CommunityFilter = 'all' | Terrain;
 type FeatherName = keyof typeof Feather.glyphMap;
 
 const TRAIL_BADGE: Record<TrailType, FeatherName> = { foot: 'compass', bicycle: 'wind', mtb: 'trending-up' };
 const TRAIL_FILTER_LABEL: Record<TrailType, string> = { foot: 'Pédestre', bicycle: 'Vélo', mtb: 'VTT' };
+
+const COMMUNITY_FILTERS: { value: CommunityFilter; label: string; icon?: FeatherName }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'trail', label: 'Trail', icon: 'trending-up' },
+  { value: 'road', label: 'Route', icon: 'navigation' },
+  { value: 'mixed', label: 'Mixte', icon: 'git-merge' },
+];
 
 /** Port de #page-explorer (index.html:751-786) — onglets Sentiers OSM / Communauté. */
 export function ExplorerScreen({ navigation }: Props) {
@@ -30,6 +39,7 @@ export function ExplorerScreen({ navigation }: Props) {
   const [trailsError, setTrailsError] = useState('');
 
   const [community, setCommunity] = useState<CommunityRoute[]>([]);
+  const [communityFilter, setCommunityFilter] = useState<CommunityFilter>('all');
   const [loadingCommunity, setLoadingCommunity] = useState(false);
   const [communityError, setCommunityError] = useState('');
   const [communityLoaded, setCommunityLoaded] = useState(false);
@@ -66,6 +76,7 @@ export function ExplorerScreen({ navigation }: Props) {
   }
 
   const filteredTrails = trailFilter === 'all' ? trails : trails.filter((t) => t.type === trailFilter);
+  const filteredCommunity = communityFilter === 'all' ? community : community.filter((r) => r.terrain === communityFilter);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
@@ -129,9 +140,35 @@ export function ExplorerScreen({ navigation }: Props) {
         </View>
       ) : (
         <View style={styles.flex}>
+          {community.length > 0 && (
+            <View style={styles.filterRow}>
+              {COMMUNITY_FILTERS.map((f) => (
+                <Pressable
+                  key={f.value}
+                  onPress={() => setCommunityFilter(f.value)}
+                  style={[
+                    styles.filterTab,
+                    { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
+                    communityFilter === f.value && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
+                  ]}
+                >
+                  {f.icon && <Feather name={f.icon} size={12} color={communityFilter === f.value ? tokens.text : tokens.text2} />}
+                  <Text
+                    style={[
+                      styles.filterLabel,
+                      { color: tokens.text2, fontFamily: fonts.mono },
+                      communityFilter === f.value && { color: tokens.text, fontWeight: '700' },
+                    ]}
+                  >
+                    {f.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
           {!!communityError && <Text style={[styles.error, { color: tokens.danger }]}>{communityError}</Text>}
           <FlatList
-            data={community}
+            data={filteredCommunity}
             keyExtractor={(r) => r.id}
             contentContainerStyle={styles.list}
             refreshing={loadingCommunity}
@@ -140,7 +177,9 @@ export function ExplorerScreen({ navigation }: Props) {
               !loadingCommunity ? (
                 <View style={styles.empty}>
                   <Feather name="globe" size={36} color={tokens.text3} />
-                  <Text style={[styles.emptySub, { color: tokens.text2 }]}>Aucun parcours partagé. Sois le premier !</Text>
+                  <Text style={[styles.emptySub, { color: tokens.text2 }]}>
+                    {community.length === 0 ? 'Aucun parcours partagé. Sois le premier !' : 'Aucun parcours dans cette catégorie.'}
+                  </Text>
                 </View>
               ) : null
             }

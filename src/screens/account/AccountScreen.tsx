@@ -15,6 +15,8 @@ import { savePhysicalData, updateProfilePreference } from '../../lib/supabase/pr
 import { signOut, updatePassword } from '../../lib/supabase/auth';
 import { deleteAccountData } from '../../lib/supabase/account';
 import { cancelDailyReminder, getReminderSettings, setDailyReminder } from '../../lib/notifications';
+import { passwordStrength } from '../../lib/passwordStrength';
+import { exportUserData } from '../../lib/exportUserData';
 import { Level, Terrain, UserProfile } from '../../types';
 
 type FeatherName = keyof typeof Feather.glyphMap;
@@ -33,18 +35,6 @@ const TERRAIN_OPTIONS = [
 const THEME_LABEL: Record<ThemeMode, string> = { dark: 'Sombre', auto: 'Auto', light: 'Clair' };
 const THEME_ICON: Record<ThemeMode, FeatherName> = { dark: 'moon', auto: 'smartphone', light: 'sun' };
 
-function passwordStrength(pw: string): { label: string; color: 'danger' | 'energy' | 'success' } | null {
-  if (!pw) return null;
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
-  if (/\d/.test(pw)) score++;
-  if (/[^a-zA-Z0-9]/.test(pw)) score++;
-  if (score <= 1) return { label: 'Faible', color: 'danger' };
-  if (score <= 2) return { label: 'Moyen', color: 'energy' };
-  return { label: 'Fort', color: 'success' };
-}
-
 /** Port de screen-account (index.html:2119-2171). */
 export function AccountScreen() {
   const { session, profile, setProfile } = useAuth();
@@ -58,6 +48,7 @@ export function AccountScreen() {
   const [savingPhysical, setSavingPhysical] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState({ hour: 18, minute: 0 });
   const [reminderBusy, setReminderBusy] = useState(false);
@@ -153,6 +144,17 @@ export function AccountScreen() {
     );
   }
 
+  async function handleExportData() {
+    setExportingData(true);
+    try {
+      await exportUserData(profile!, savedRoutes);
+    } catch (e) {
+      showToast((e as Error).message, true);
+    } finally {
+      setExportingData(false);
+    }
+  }
+
   async function handleDeleteAccount() {
     if (!session?.user) return;
     setDeletingAccount(true);
@@ -227,6 +229,10 @@ export function AccountScreen() {
           )}
           <TextField label="Confirmer le mot de passe" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="••••••••" />
           <Button title="Mettre à jour" onPress={handleUpdatePassword} loading={updatingPassword} style={styles.updatePwdBtn} />
+        </Section>
+
+        <Section title="Mes données">
+          <Button title="Exporter mes données" icon="download" variant="secondary" onPress={handleExportData} loading={exportingData} />
         </Section>
 
         <View style={[styles.dangerZone, { borderColor: 'rgba(229,62,62,0.3)' }]}>

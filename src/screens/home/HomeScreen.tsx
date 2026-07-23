@@ -81,20 +81,22 @@ export function HomeScreen({ navigation }: Props) {
           </ScrollView>
         </View>
 
-        {recent.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View>
-                <Text style={[styles.sectionTitle, { color: tokens.text3, fontFamily: fonts.mono }]}>DERNIERS PARCOURS</Text>
-                <Text style={[styles.sectionSub, { color: tokens.text2 }]}>Tes créations récentes</Text>
-              </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: tokens.text3, fontFamily: fonts.mono }]}>DERNIERS PARCOURS</Text>
+              <Text style={[styles.sectionSub, { color: tokens.text2 }]}>Tes créations récentes</Text>
+            </View>
+            {recent.length > 0 && (
               <Button
                 title="Voir tout"
                 variant="text"
                 onPress={() => tabNavigation?.navigate('MyRoutes', { screen: 'MyRoutesScreen' })}
               />
-            </View>
-            {recent.map((r) => (
+            )}
+          </View>
+          {recent.length > 0 ? (
+            recent.map((r) => (
               <Pressable
                 key={r.id}
                 style={[styles.recentCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
@@ -112,9 +114,15 @@ export function HomeScreen({ navigation }: Props) {
                   </View>
                 </View>
               </Pressable>
-            ))}
-          </View>
-        )}
+            ))
+          ) : (
+            <View style={[styles.emptyState, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+              <Feather name="flag" size={26} color={tokens.text3} />
+              <Text style={[styles.emptyStateTitle, { color: tokens.text, fontFamily: fonts.display }]}>Aucun parcours pour l'instant</Text>
+              <Text style={[styles.emptyStateSub, { color: tokens.text2 }]}>Génère ton premier parcours ci-dessus pour le retrouver ici.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -168,4 +176,7 @@ const styles = StyleSheet.create({
   recentMetaRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   recentMeta: { fontSize: 11 },
+  emptyState: { alignItems: 'center', gap: 6, padding: 24, borderRadius: radii.md, borderWidth: 1 },
+  emptyStateTitle: { fontSize: 15, marginTop: 4 },
+  emptyStateSub: { fontSize: 12, textAlign: 'center' },
 });

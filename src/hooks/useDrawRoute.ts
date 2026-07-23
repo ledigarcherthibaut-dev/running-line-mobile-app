@@ -46,6 +46,11 @@ export function useDrawRoute(terrain: Terrain) {
     setSegments((s) => s.slice(0, -1));
   }, []);
 
+  const closeLoop = useCallback(async () => {
+    if (points.length < 2) return;
+    await addPoint(points[0]);
+  }, [points, addPoint]);
+
   const clear = useCallback(() => {
     setPoints([]);
     setSegments([]);
@@ -63,5 +68,5 @@ export function useDrawRoute(terrain: Terrain) {
     };
   }
 
-  return { points, allCoords, distKm, routing, error, addPoint, undo, clear, finish };
+  return { points, allCoords, distKm, routing, error, addPoint, undo, clear, closeLoop, finish };
 }

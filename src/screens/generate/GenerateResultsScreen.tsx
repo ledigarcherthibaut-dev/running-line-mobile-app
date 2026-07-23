@@ -22,9 +22,30 @@ type Props = NativeStackScreenProps<GenerateStackParamList, 'GenerateResults'>;
 const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
 
 /** Port du panneau résultats (index.html:96-153, 4348-4373) — cartes de résultats + carte. */
+/**
+ * Le meilleur tracé parmi les alternatives n'est pas garanti en première position par le
+ * générateur (ordre = ordre de découverte, pas de classement) — on le déduit ici de l'écart à
+ * la distance cible et, pour le trail, du taux de bitume.
+ */
+function findRecommendedIndex(routes: GeneratedRoute[], targetKm: number): number {
+  if (routes.length < 2) return 0;
+  let bestIdx = 0;
+  let bestScore = Infinity;
+  routes.forEach((r, i) => {
+    const distErr = Math.abs(r.distKm - targetKm) / targetKm;
+    const purityPenalty = r.purity ? r.purity.pct / 100 : 0;
+    const score = distErr + purityPenalty * 0.5;
+    if (score < bestScore) {
+      bestScore = score;
+      bestIdx = i;
+    }
+  });
+  return bestIdx;
+}
+
 export function GenerateResultsScreen({}: Props) {
   const { tokens } = useTheme();
-  const { terrain, results } = useGenerate();
+  const { terrain, distance, results } = useGenerate();
   const { profile } = useAuth();
   const { refresh: refreshSavedRoutes } = useRoutes();
   const { showToast } = useToast();
@@ -32,6 +53,7 @@ export function GenerateResultsScreen({}: Props) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [saveTarget, setSaveTarget] = useState<GeneratedRoute | null>(null);
   const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
+  const recommendedIdx = findRecommendedIndex(results, distance);
 
   async function handleSaveConfirm(name: string, isFav: boolean, isPublic: boolean) {
     if (!saveTarget || !profile) return;
@@ -69,6 +91,7 @@ export function GenerateResultsScreen({}: Props) {
             route={r}
             terrain={terrain}
             selected={i === selectedIdx}
+            recommended={results.length > 1 && i === recommendedIdx}
             onSelect={() => setSelectedIdx(i)}
             onCenter={() => mapRef.current?.fitToCoordinates(r.coords.map((c) => ({ lat: c[1], lng: c[0] })))}
             onSave={() => setSaveTarget(r)}

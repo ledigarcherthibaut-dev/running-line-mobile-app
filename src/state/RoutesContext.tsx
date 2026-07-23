@@ -18,6 +18,7 @@ type RoutesContextValue = {
   refresh: () => Promise<void>;
   toggleFavorite: (routeId: string) => Promise<void>;
   togglePublic: (routeId: string) => Promise<void>;
+  rename: (routeId: string, name: string) => Promise<void>;
   remove: (routeId: string) => Promise<void>;
 };
 
@@ -98,6 +99,20 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
     [session, savedRoutes]
   );
 
+  const rename = useCallback(
+    async (routeId: string, name: string) => {
+      if (!session?.user) return;
+      const { error } = await routesApi.renameRoute(session.user.id, routeId, name);
+      if (error) throw new Error(error.message);
+      setSavedRoutes((prev) => {
+        const next = prev.map((x) => (x.id === routeId ? { ...x, name } : x));
+        writeCache(cacheKeyFor(session.user.id), next);
+        return next;
+      });
+    },
+    [session]
+  );
+
   const remove = useCallback(
     async (routeId: string) => {
       if (!session?.user) return;
@@ -112,8 +127,8 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ savedRoutes, loading, refresh, toggleFavorite, togglePublic, remove }),
-    [savedRoutes, loading, refresh, toggleFavorite, togglePublic, remove]
+    () => ({ savedRoutes, loading, refresh, toggleFavorite, togglePublic, rename, remove }),
+    [savedRoutes, loading, refresh, toggleFavorite, togglePublic, rename, remove]
   );
 
   return <RoutesContext.Provider value={value}>{children}</RoutesContext.Provider>;
