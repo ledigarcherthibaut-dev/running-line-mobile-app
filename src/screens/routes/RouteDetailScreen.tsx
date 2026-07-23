@@ -8,13 +8,14 @@ import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
 import { RateRouteModal } from '../../components/RateRouteModal';
+import { GarminExportModal } from '../../components/GarminExportModal';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
+import { useGarminExport } from '../../hooks/useGarminExport';
 import { fetchCommunityRouteDetail, saveRoute, submitRating } from '../../lib/supabase/routes';
-import { shareRouteAsGPX } from '../../lib/storage/gpx';
 import type { RouteDetailParams } from '../../navigation/types';
 import { SavedRoute } from '../../types';
 
@@ -32,6 +33,7 @@ export function RouteDetailScreen() {
   const [communityRoute, setCommunityRoute] = useState<SavedRoute | null>(null);
   const [loading, setLoading] = useState(false);
   const [rateVisible, setRateVisible] = useState(false);
+  const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
   const owned = savedRoutes.find((r) => r.id === params.routeId);
   const route = owned ?? communityRoute;
@@ -107,7 +109,7 @@ export function RouteDetailScreen() {
 
         <View style={styles.actions}>
           <Button title="Noter" icon="star" variant="secondary" onPress={() => setRateVisible(true)} style={styles.actionBtn} />
-          <Button title="Exporter GPX" icon="share-2" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Envoyer vers Garmin" icon="watch" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
         </View>
 
         {owned ? (
@@ -133,6 +135,7 @@ export function RouteDetailScreen() {
       </ScrollView>
 
       <RateRouteModal visible={rateVisible} routeName={route.name} onCancel={() => setRateVisible(false)} onSubmit={handleRate} />
+      <GarminExportModal visible={garminModalVisible} filename={garminFilename} onClose={closeGarminModal} />
     </SafeAreaView>
   );
 }

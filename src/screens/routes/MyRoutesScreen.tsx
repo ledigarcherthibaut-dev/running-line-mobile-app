@@ -5,13 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { SavedRouteCard } from '../../components/SavedRouteCard';
 import { RateRouteModal } from '../../components/RateRouteModal';
+import { GarminExportModal } from '../../components/GarminExportModal';
 import { useRoutes } from '../../state/RoutesContext';
 import { useAuth } from '../../state/AuthContext';
 import { useToast } from '../../state/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
+import { useGarminExport } from '../../hooks/useGarminExport';
 import { submitRating } from '../../lib/supabase/routes';
-import { shareRouteAsGPX } from '../../lib/storage/gpx';
 import type { MyRoutesStackParamList } from '../../navigation/types';
 import { SavedRoute } from '../../types';
 
@@ -35,6 +36,7 @@ export function MyRoutesScreen({ navigation }: Props) {
   const { showToast } = useToast();
   const [filter, setFilter] = useState<Filter>('all');
   const [rateTarget, setRateTarget] = useState<SavedRoute | null>(null);
+  const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
   const filtered = savedRoutes.filter((r) => {
     if (filter === 'all') return true;
@@ -90,7 +92,7 @@ export function MyRoutesScreen({ navigation }: Props) {
               onToggleFavorite={() => toggleFavorite(item.id)}
               onTogglePublic={() => togglePublic(item.id)}
               onRate={() => setRateTarget(item)}
-              onExportGpx={() => shareRouteAsGPX(item).catch((e) => showToast(e.message, true))}
+              onExportGpx={() => exportToGarmin(item).catch((e) => showToast(e.message, true))}
               onDelete={() => remove(item.id)}
             />
           )}
@@ -103,6 +105,7 @@ export function MyRoutesScreen({ navigation }: Props) {
         onCancel={() => setRateTarget(null)}
         onSubmit={handleRate}
       />
+      <GarminExportModal visible={garminModalVisible} filename={garminFilename} onClose={closeGarminModal} />
     </SafeAreaView>
   );
 }

@@ -58,7 +58,7 @@ export function SavedRouteCard({
           <ActionBtn icon="star" active={route.isFav} onPress={onToggleFavorite} />
           <ActionBtn icon="message-circle" onPress={onRate} />
           <ActionBtn icon={route.isPublic ? 'globe' : 'lock'} active={route.isPublic} onPress={onTogglePublic} />
-          <ActionBtn icon="download" onPress={onExportGpx} />
+          <ActionBtn icon="watch" onPress={onExportGpx} />
           <ActionBtn icon="trash-2" danger onPress={confirmDelete} />
         </View>
       </View>

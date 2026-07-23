@@ -7,15 +7,16 @@ import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
+import { GarminExportModal } from '../../components/GarminExportModal';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
+import { useGarminExport } from '../../hooks/useGarminExport';
 import { fetchTrailGeometry } from '../../lib/api/overpass';
 import { analyzeElevation } from '../../lib/routing/geo';
 import { saveRoute } from '../../lib/supabase/routes';
-import { shareRouteAsGPX } from '../../lib/storage/gpx';
 import type { TrailDetailParams } from '../../navigation/types';
 import { GeneratedRoute } from '../../types';
 
@@ -33,6 +34,7 @@ export function TrailDetailScreen() {
   const [route, setRoute] = useState<GeneratedRoute | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
   useEffect(() => {
     let cancelled = false;
@@ -88,10 +90,11 @@ export function TrailDetailScreen() {
         </View>
         <ElevationChart elevations={route.elevation.elevations} color={tokens.sky} height={50} />
         <View style={styles.actions}>
-          <Button title="Exporter GPX" icon="share-2" variant="secondary" onPress={() => shareRouteAsGPX(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Envoyer vers Garmin" icon="watch" variant="secondary" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
           <Button title="Sauvegarder" icon="save" onPress={handleSave} style={styles.actionBtn} />
         </View>
       </ScrollView>
+      <GarminExportModal visible={garminModalVisible} filename={garminFilename} onClose={closeGarminModal} />
     </SafeAreaView>
   );
 }

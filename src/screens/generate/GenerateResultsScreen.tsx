@@ -6,13 +6,14 @@ import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { RouteResultCard } from '../../components/RouteResultCard';
 import { SaveRouteModal } from '../../components/SaveRouteModal';
+import { GarminExportModal } from '../../components/GarminExportModal';
 import { useTheme } from '../../theme/ThemeContext';
 import { useGenerate } from '../../state/GenerateContext';
 import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
+import { useGarminExport } from '../../hooks/useGarminExport';
 import { saveRoute } from '../../lib/supabase/routes';
-import { shareRouteAsGPX } from '../../lib/storage/gpx';
 import type { GenerateStackParamList } from '../../navigation/types';
 import { GeneratedRoute } from '../../types';
 
@@ -30,6 +31,7 @@ export function GenerateResultsScreen({}: Props) {
   const mapRef = useRef<RouteMapHandle>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [saveTarget, setSaveTarget] = useState<GeneratedRoute | null>(null);
+  const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
 
   async function handleSaveConfirm(name: string, isFav: boolean, isPublic: boolean) {
     if (!saveTarget || !profile) return;
@@ -45,7 +47,7 @@ export function GenerateResultsScreen({}: Props) {
 
   async function handleExport(route: GeneratedRoute) {
     try {
-      await shareRouteAsGPX(route);
+      await exportToGarmin(route);
     } catch (e) {
       showToast((e as Error).message, true);
     }
@@ -81,6 +83,7 @@ export function GenerateResultsScreen({}: Props) {
         onCancel={() => setSaveTarget(null)}
         onConfirm={handleSaveConfirm}
       />
+      <GarminExportModal visible={garminModalVisible} filename={garminFilename} onClose={closeGarminModal} />
     </SafeAreaView>
   );
 }
