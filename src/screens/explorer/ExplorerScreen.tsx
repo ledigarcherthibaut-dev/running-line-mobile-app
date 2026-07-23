@@ -1,16 +1,18 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
+import { RouteMap } from '../../components/map/RouteMap';
+import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { useTheme } from '../../theme/ThemeContext';
-import { fonts, radii } from '../../theme/tokens';
+import { fonts, lightTokens, radii } from '../../theme/tokens';
 import { getUserLocation, LocationError } from '../../lib/location/location';
 import { fetchNearbyTrails, OSMTrail, TrailType } from '../../lib/api/overpass';
 import { fetchCommunityRoutes, CommunityRoute } from '../../lib/supabase/routes';
 import type { ExplorerStackParamList } from '../../navigation/types';
-import { Terrain } from '../../types';
+import { LatLng, Terrain } from '../../types';
 
 type Props = NativeStackScreenProps<ExplorerStackParamList, 'ExplorerScreen'>;
 type Tab = 'trails' | 'community';
@@ -20,6 +22,9 @@ type FeatherName = keyof typeof Feather.glyphMap;
 
 const TRAIL_BADGE: Record<TrailType, FeatherName> = { foot: 'compass', bicycle: 'wind', mtb: 'trending-up' };
 const TRAIL_FILTER_LABEL: Record<TrailType, string> = { foot: 'Pédestre', bicycle: 'Vélo', mtb: 'VTT' };
+const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
+/** Couleurs de marque, identiques en clair/sombre (cf. theme/tokens.ts) — utilisables hors composant. */
+const MARKER_COLOR: Record<TrailType, string> = { foot: lightTokens.sky, bicycle: lightTokens.energy, mtb: lightTokens.secondary };
 
 const COMMUNITY_FILTERS: { value: CommunityFilter; label: string; icon?: FeatherName }[] = [
   { value: 'all', label: 'Tous' },
@@ -32,11 +37,13 @@ const COMMUNITY_FILTERS: { value: CommunityFilter; label: string; icon?: Feather
 export function ExplorerScreen({ navigation }: Props) {
   const { tokens } = useTheme();
   const [tab, setTab] = useState<Tab>('trails');
+  const mapRef = useRef<RouteMapHandle>(null);
 
   const [trails, setTrails] = useState<OSMTrail[]>([]);
   const [trailFilter, setTrailFilter] = useState<TrailFilter>('all');
   const [loadingTrails, setLoadingTrails] = useState(false);
   const [trailsError, setTrailsError] = useState('');
+  const [searchCenter, setSearchCenter] = useState<LatLng | null>(null);
 
   const [community, setCommunity] = useState<CommunityRoute[]>([]);
   const [communityFilter, setCommunityFilter] = useState<CommunityFilter>('all');
@@ -49,7 +56,11 @@ export function ExplorerScreen({ navigation }: Props) {
     setTrailsError('');
     try {
       const center = await getUserLocation();
-      setTrails(await fetchNearbyTrails(center));
+      setSearchCenter(center);
+      const found = await fetchNearbyTrails(center);
+      setTrails(found);
+      const points = [center, ...found.map((t) => t.center).filter((c): c is LatLng => !!c)];
+      requestAnimationFrame(() => mapRef.current?.fitToCoordinates(points));
     } catch (e) {
       setTrailsError(e instanceof LocationError ? e.message : (e as Error).message);
     } finally {
@@ -96,6 +107,19 @@ export function ExplorerScreen({ navigation }: Props) {
             </View>
           ) : (
             <>
+              <View style={styles.trailMapArea}>
+                <RouteMap
+                  ref={mapRef}
+                  initialRegion={searchCenter ? { latitude: searchCenter.lat, longitude: searchCenter.lng, latitudeDelta: 0.3, longitudeDelta: 0.3 } : DEFAULT_REGION}
+                  markers={filteredTrails
+                    .filter((t): t is OSMTrail & { center: LatLng } => !!t.center)
+                    .map((t) => ({ id: String(t.id), coord: t.center, color: MARKER_COLOR[t.type] }))}
+                  onMarkerPress={(id) => {
+                    const trail = trails.find((t) => String(t.id) === id);
+                    if (trail) navigation.navigate('TrailDetail', { trailId: trail.id, trailName: trail.name });
+                  }}
+                />
+              </View>
               <View style={styles.filterRow}>
                 {(['all', 'foot', 'bicycle', 'mtb'] as TrailFilter[]).map((f) => (
                   <Pressable
@@ -235,6 +259,7 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: 'row', gap: 8, padding: 16 },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: radii.full },
   tabLabel: { fontSize: 13 },
+  trailMapArea: { height: 180, marginHorizontal: 16, marginBottom: 10, borderRadius: radii.md, overflow: 'hidden' },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
   filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 11 },
