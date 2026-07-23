@@ -19,6 +19,10 @@ export function useDrawRoute(terrain: Terrain) {
 
   const allCoords: Coord[] = segments.flatMap((s) => s.coords);
   const distKm = allCoords.length > 1 ? calcDist(allCoords) : 0;
+  const isClosed =
+    points.length >= 3 &&
+    points[points.length - 1].lat === points[0].lat &&
+    points[points.length - 1].lng === points[0].lng;
 
   const addPoint = useCallback(
     async (pt: LatLng) => {
@@ -47,9 +51,9 @@ export function useDrawRoute(terrain: Terrain) {
   }, []);
 
   const closeLoop = useCallback(async () => {
-    if (points.length < 2) return;
+    if (points.length < 2 || isClosed) return;
     await addPoint(points[0]);
-  }, [points, addPoint]);
+  }, [points, isClosed, addPoint]);
 
   const clear = useCallback(() => {
     setPoints([]);
@@ -68,5 +72,5 @@ export function useDrawRoute(terrain: Terrain) {
     };
   }
 
-  return { points, allCoords, distKm, routing, error, addPoint, undo, clear, closeLoop, finish };
+  return { points, allCoords, distKm, routing, error, isClosed, addPoint, undo, clear, closeLoop, finish };
 }

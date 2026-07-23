@@ -100,6 +100,7 @@ export function RouteDetailScreen() {
     try {
       await rename(owned.id, trimmed);
       setEditingName(false);
+      showToast('Parcours renommé', false, 2500, 'edit-2');
     } catch (e) {
       showToast((e as Error).message, true);
     } finally {

@@ -33,8 +33,16 @@ export function AddressAutocompleteField({
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const requestId = useRef(0);
+  const lastSelectedLabel = useRef<string | null>(null);
 
   useEffect(() => {
+    // Sélectionner une suggestion remplit le champ avec son label, ce qui redéclencherait sinon
+    // une recherche pour ce même texte juste après l'avoir choisi.
+    if (value === lastSelectedLabel.current) {
+      setSuggestions([]);
+      setLoading(false);
+      return;
+    }
     if (value.trim().length < MIN_CHARS) {
       setSuggestions([]);
       setLoading(false);
@@ -53,12 +61,14 @@ export function AddressAutocompleteField({
   }, [value]);
 
   function handleChangeText(text: string) {
+    lastSelectedLabel.current = null;
     onChangeText(text);
     onSelectPlace(null);
   }
 
   function handleSelect(place: PlaceSuggestion) {
     requestId.current++;
+    lastSelectedLabel.current = place.label;
     onChangeText(place.label);
     onSelectPlace(place);
     setSuggestions([]);
