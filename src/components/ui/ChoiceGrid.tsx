@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
+import { hapticSelect } from '../../lib/haptics';
 
 export interface ChoiceOption<T extends string> {
   value: T;
@@ -30,7 +31,10 @@ export function ChoiceGrid<T extends string>({
         return (
           <Pressable
             key={opt.value}
-            onPress={() => onSelect(opt.value)}
+            onPress={() => {
+              hapticSelect();
+              onSelect(opt.value);
+            }}
             style={[
               styles.card,
               { width: `${100 / columns - 2}%`, backgroundColor: tokens.surface2, borderColor: 'transparent' },

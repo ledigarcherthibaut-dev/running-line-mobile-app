@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radii } from '../theme/tokens';
+import { hapticError, hapticSuccess } from '../lib/haptics';
 
 type FeatherName = keyof typeof Feather.glyphMap;
 
@@ -27,6 +28,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (message: string, isError = false, ms = 3000, icon?: FeatherName) => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
       setToast({ message, isError, icon });
+      if (isError) hapticError();
+      else hapticSuccess();
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
       hideTimer.current = setTimeout(() => {
         Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => setToast(null));

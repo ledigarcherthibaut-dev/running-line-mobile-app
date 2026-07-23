@@ -5,6 +5,7 @@ import { TextField } from './ui/TextField';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
+import { hapticSelect } from '../lib/haptics';
 
 /** Port de #rate-modal (index.html:2244-2259). */
 export function RateRouteModal({
@@ -41,7 +42,17 @@ export function RateRouteModal({
 
           <View style={styles.stars}>
             {[1, 2, 3, 4, 5].map((i) => (
-              <Pressable key={i} onPress={() => setScore(i)} hitSlop={4}>
+              <Pressable
+                key={i}
+                onPress={() => {
+                  hapticSelect();
+                  setScore(i);
+                }}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityLabel={`${i} étoile${i > 1 ? 's' : ''}`}
+                accessibilityState={{ selected: i <= score }}
+              >
                 <Feather name="star" size={28} color={i <= score ? tokens.fav : tokens.border3} />
               </Pressable>
             ))}

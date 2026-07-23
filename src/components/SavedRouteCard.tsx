@@ -2,6 +2,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
+import { hapticSelect } from '../lib/haptics';
 import { RoutePreviewSvg } from './routePreview/RoutePreviewSvg';
 import { SavedRoute } from '../types';
 
@@ -55,11 +56,21 @@ export function SavedRouteCard({
         <Text style={[styles.meta, { color: tokens.text3 }]}>{route.terrain || 'mixte'} · sauvegardé</Text>
 
         <View style={styles.actions}>
-          <ActionBtn icon="star" active={route.isFav} onPress={onToggleFavorite} />
-          <ActionBtn icon="message-circle" onPress={onRate} />
-          <ActionBtn icon={route.isPublic ? 'globe' : 'lock'} active={route.isPublic} onPress={onTogglePublic} />
-          <ActionBtn icon="watch" onPress={onExportGpx} />
-          <ActionBtn icon="trash-2" danger onPress={confirmDelete} />
+          <ActionBtn
+            icon="star"
+            active={route.isFav}
+            onPress={onToggleFavorite}
+            label={route.isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          />
+          <ActionBtn icon="message-circle" onPress={onRate} label="Noter ce parcours" />
+          <ActionBtn
+            icon={route.isPublic ? 'globe' : 'lock'}
+            active={route.isPublic}
+            onPress={onTogglePublic}
+            label={route.isPublic ? 'Rendre privé' : 'Partager à la communauté'}
+          />
+          <ActionBtn icon="watch" onPress={onExportGpx} label="Envoyer vers Garmin" />
+          <ActionBtn icon="trash-2" danger onPress={confirmDelete} label="Supprimer ce parcours" />
         </View>
       </View>
     </Pressable>
@@ -71,22 +82,30 @@ function ActionBtn({
   active,
   danger,
   onPress,
+  label,
 }: {
   icon: keyof typeof Feather.glyphMap;
   active?: boolean;
   danger?: boolean;
   onPress: () => void;
+  label: string;
 }) {
   const { tokens } = useTheme();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        hapticSelect();
+        onPress();
+      }}
       style={[
         styles.actionBtn,
         { backgroundColor: tokens.surface2, borderColor: tokens.border },
         active && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
       ]}
       hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={active !== undefined ? { selected: active } : undefined}
     >
       <Feather name={icon} size={18} color={danger ? tokens.danger : active ? tokens.text : tokens.text2} />
     </Pressable>

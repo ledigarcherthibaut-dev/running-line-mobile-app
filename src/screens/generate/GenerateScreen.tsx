@@ -1,17 +1,17 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChoiceGrid } from '../../components/ui/ChoiceGrid';
 import { SliderField } from '../../components/ui/SliderField';
-import { TextField } from '../../components/ui/TextField';
+import { AddressAutocompleteField } from '../../components/ui/AddressAutocompleteField';
 import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts } from '../../theme/tokens';
 import { useGenerate } from '../../state/GenerateContext';
 import { useToast } from '../../state/ToastContext';
 import { getUserLocation, LocationError } from '../../lib/location/location';
-import { geocode } from '../../lib/api/geocode';
+import { geocode, PlaceSuggestion } from '../../lib/api/geocode';
 import { generateDirectRoute, generateLoopRoutes, randomStartNear } from '../../lib/routing/generateRoutes';
 import { formatBRouterError } from '../../lib/routing/brouter';
 import type { GenerateStackParamList } from '../../navigation/types';
@@ -33,7 +33,9 @@ export function GenerateScreen({ navigation, route }: Props) {
   const { terrain, setTerrain, distance, setDistance, elevation, setElevation, userCoords, setUserCoords, setResults } = useGenerate();
 
   const [startText, setStartText] = useState('');
+  const [startPlace, setStartPlace] = useState<PlaceSuggestion | null>(null);
   const [endText, setEndText] = useState('');
+  const [endPlace, setEndPlace] = useState<PlaceSuggestion | null>(null);
   const [generating, setGenerating] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
 
@@ -67,7 +69,7 @@ export function GenerateScreen({ navigation, route }: Props) {
       let startCoords = center;
       if (startText.trim()) {
         setProgressMsg('Géocodage du départ…');
-        startCoords = await geocode(startText.trim());
+        startCoords = startPlace?.coords ?? (await geocode(startText.trim()));
       } else if (center) {
         startCoords = randomStartNear(center);
       }
@@ -75,7 +77,7 @@ export function GenerateScreen({ navigation, route }: Props) {
 
       if (endText.trim()) {
         setProgressMsg("Géocodage de l'arrivée…");
-        const endCoords = await geocode(endText.trim());
+        const endCoords = endPlace?.coords ?? (await geocode(endText.trim()));
         setProgressMsg('Calcul BRouter…');
         const route_ = await generateDirectRoute(startCoords, endCoords, terrain);
         setResults([route_]);
@@ -102,37 +104,51 @@ export function GenerateScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ChoiceGrid options={TERRAIN_OPTIONS} value={terrain} onSelect={setTerrain} columns={4} />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={12}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <ChoiceGrid options={TERRAIN_OPTIONS} value={terrain} onSelect={setTerrain} columns={4} />
 
-        <SliderField
-          label="Distance"
-          value={distance}
-          onValueChange={setDistance}
-          minimumValue={1}
-          maximumValue={100}
-          step={0.5}
-          formatValue={(v) => `${v.toFixed(1)} km`}
-        />
-        <SliderField
-          label="Dénivelé positif"
-          value={elevation}
-          onValueChange={setElevation}
-          minimumValue={0}
-          maximumValue={2000}
-          step={25}
-          formatValue={(v) => `${v} m`}
-        />
+          <SliderField
+            label="Distance"
+            value={distance}
+            onValueChange={setDistance}
+            minimumValue={1}
+            maximumValue={100}
+            step={0.5}
+            formatValue={(v) => `${v.toFixed(1)} km`}
+          />
+          <SliderField
+            label="Dénivelé positif"
+            value={elevation}
+            onValueChange={setElevation}
+            minimumValue={0}
+            maximumValue={2000}
+            step={25}
+            formatValue={(v) => `${v} m`}
+          />
 
-        <TextField label="Départ" value={startText} onChangeText={setStartText} placeholder="Adresse ou ville (vide = position GPS)" />
-        <Button title="Me géolocaliser" icon="map-pin" variant="secondary" onPress={handleGeolocate} />
-        <TextField label="Arrivée (optionnel)" value={endText} onChangeText={setEndText} placeholder="Pour un itinéraire direct A→B" />
+          <AddressAutocompleteField
+            label="Départ"
+            value={startText}
+            onChangeText={setStartText}
+            onSelectPlace={setStartPlace}
+            placeholder="Adresse ou ville (vide = position GPS)"
+          />
+          <Button title="Me géolocaliser" icon="map-pin" variant="secondary" onPress={handleGeolocate} />
+          <AddressAutocompleteField
+            label="Arrivée (optionnel)"
+            value={endText}
+            onChangeText={setEndText}
+            onSelectPlace={setEndPlace}
+            placeholder="Pour un itinéraire direct A→B"
+          />
 
-        {generating && <Text style={[styles.progress, { color: tokens.text2, fontFamily: fonts.mono }]}>{progressMsg}</Text>}
+          {generating && <Text style={[styles.progress, { color: tokens.text2, fontFamily: fonts.mono }]}>{progressMsg}</Text>}
 
-        <Button title="Générer les parcours" icon="arrow-right" iconPosition="right" onPress={handleGenerate} loading={generating} />
-        <Button title="Dessiner manuellement" icon="edit-3" variant="secondary" onPress={() => navigation.navigate('DrawRoute')} />
-      </ScrollView>
+          <Button title="Générer les parcours" icon="arrow-right" iconPosition="right" onPress={handleGenerate} loading={generating} />
+          <Button title="Dessiner manuellement" icon="edit-3" variant="secondary" onPress={() => navigation.navigate('DrawRoute')} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

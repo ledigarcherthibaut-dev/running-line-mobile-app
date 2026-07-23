@@ -24,6 +24,8 @@ export function ProfileHeaderButton() {
       onPress={openAccount}
       style={[styles.btn, { backgroundColor: tokens.accent, borderColor: 'rgba(0,0,0,0.15)' }]}
       hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Ouvrir mon compte"
     >
       <Text style={[styles.text, { color: tokens.text, fontFamily: fonts.display }]}>{initial}</Text>
     </Pressable>
