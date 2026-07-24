@@ -38,9 +38,14 @@ export function ChoiceGrid<T extends string>({
             style={[
               styles.card,
               { width: `${100 / columns - 2}%`, backgroundColor: tokens.surface2, borderColor: 'transparent' },
-              selected && { borderColor: tokens.text, backgroundColor: tokens.accent },
+              selected && { borderColor: tokens.accent, backgroundColor: tokens.accentDim },
             ]}
           >
+            {selected && (
+              <View style={[styles.check, { backgroundColor: tokens.accent }]}>
+                <Feather name="check" size={10} color={tokens.bg} />
+              </View>
+            )}
             <Feather name={opt.icon} size={22} color={tokens.text} />
             <Text style={[styles.label, { color: tokens.text }]}>{opt.label}</Text>
             {opt.sub ? <Text style={[styles.sub, { color: tokens.text3 }]}>{opt.sub}</Text> : null}
@@ -59,6 +64,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: radii.md,
     borderWidth: 1.5,
+  },
+  check: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: { fontSize: 13, fontFamily: fonts.body, textAlign: 'center' },
   sub: { fontSize: 10, fontFamily: fonts.mono },

@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
 import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
+import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, lightTokens, radii } from '../../theme/tokens';
 import { getUserLocation, LocationError } from '../../lib/location/location';
@@ -212,25 +213,32 @@ export function ExplorerScreen({ navigation }: Props) {
                 style={[styles.communityCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
               >
-                <View style={styles.communityHeader}>
-                  <View style={[styles.communityAvatar, { backgroundColor: tokens.secondaryDim }]}>
-                    <Text style={[styles.communityAvatarText, { color: tokens.text, fontFamily: fonts.display }]}>{(item.userName[0] || 'A').toUpperCase()}</Text>
+                {item.coords?.length > 1 && (
+                  <View style={styles.communityPreview}>
+                    <RouteSatellitePreview coords={item.coords} color={tokens.accent} />
                   </View>
-                  <View style={styles.flex}>
-                    <Text style={[styles.communityName, { color: tokens.text, fontFamily: fonts.display }]} numberOfLines={1}>{item.name}</Text>
-                    <Text style={[styles.communityUser, { color: tokens.text3 }]}>{item.userName}</Text>
+                )}
+                <View style={styles.communityBody}>
+                  <View style={styles.communityHeader}>
+                    <View style={[styles.communityAvatar, { backgroundColor: tokens.secondaryDim }]}>
+                      <Text style={[styles.communityAvatarText, { color: tokens.text, fontFamily: fonts.display }]}>{(item.userName[0] || 'A').toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.flex}>
+                      <Text style={[styles.communityName, { color: tokens.text, fontFamily: fonts.display }]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[styles.communityUser, { color: tokens.text3 }]}>{item.userName}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.communityMeta}>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
-                </View>
-                <View style={styles.communityRatingRow}>
-                  <Feather name="star" size={11} color={tokens.fav} />
-                  <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
-                    {item.ratingCount > 0 ? `${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
-                  </Text>
+                  <View style={styles.communityMeta}>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
+                    <Text style={[styles.communityStatMuted, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
+                  </View>
+                  <View style={styles.communityRatingRow}>
+                    <Feather name="star" size={11} color={tokens.fav} />
+                    <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
+                      {item.ratingCount > 0 ? `${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
+                    </Text>
+                  </View>
                 </View>
               </Pressable>
             )}
@@ -272,14 +280,17 @@ const styles = StyleSheet.create({
   trailInfo: { flex: 1 },
   trailName: { fontSize: 14 },
   trailMeta: { fontSize: 11 },
-  communityCard: { borderRadius: radii.md, padding: 14, gap: 8, borderWidth: 1 },
+  communityCard: { borderRadius: radii.md, overflow: 'hidden', borderWidth: 1 },
+  communityPreview: { height: 110 },
+  communityBody: { padding: 14, gap: 8 },
   communityHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   communityAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   communityAvatarText: { fontSize: 14 },
   communityName: { fontSize: 14 },
   communityUser: { fontSize: 11 },
   communityMeta: { flexDirection: 'row', gap: 12 },
-  communityStat: { fontSize: 11 },
+  communityStat: { fontSize: 12, fontWeight: '700' },
+  communityStatMuted: { fontSize: 11 },
   communityRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   communityRating: { fontSize: 11 },
 });

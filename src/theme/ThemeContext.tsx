@@ -28,8 +28,8 @@ function resolveScheme(mode: ThemeMode, systemScheme: ReturnType<typeof useColor
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  // Look actuel de l'app par défaut (clair/crème) tant que l'utilisateur n'a pas choisi explicitement.
-  const [mode, setModeState] = useState<ThemeMode>('light');
+  // Sombre par défaut (refonte UI) tant que l'utilisateur n'a pas choisi explicitement — le clair reste disponible via le sélecteur du Compte.
+  const [mode, setModeState] = useState<ThemeMode>('dark');
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((stored) => {

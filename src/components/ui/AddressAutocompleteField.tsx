@@ -5,6 +5,7 @@ import { TextField } from './TextField';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { PlaceSuggestion, searchPlaces } from '../../lib/api/geocode';
+import { LatLng } from '../../types';
 
 const DEBOUNCE_MS = 400;
 const MIN_CHARS = 3;
@@ -21,6 +22,7 @@ export function AddressAutocompleteField({
   onChangeText,
   onSelectPlace,
   placeholder,
+  biasCoords,
   ...inputProps
 }: {
   label: string;
@@ -28,6 +30,8 @@ export function AddressAutocompleteField({
   onChangeText: (text: string) => void;
   onSelectPlace: (place: PlaceSuggestion | null) => void;
   placeholder?: string;
+  /** Position à privilégier dans les suggestions (position de l'utilisateur, ou départ déjà choisi). */
+  biasCoords?: LatLng | null;
 } & Omit<TextInputProps, 'value' | 'onChangeText' | 'placeholder'>) {
   const { tokens } = useTheme();
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
@@ -51,13 +55,14 @@ export function AddressAutocompleteField({
     setLoading(true);
     const id = ++requestId.current;
     const timer = setTimeout(async () => {
-      const results = await searchPlaces(value.trim());
+      const results = await searchPlaces(value.trim(), biasCoords ?? undefined);
       if (requestId.current === id) {
         setSuggestions(results);
         setLoading(false);
       }
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   function handleChangeText(text: string) {

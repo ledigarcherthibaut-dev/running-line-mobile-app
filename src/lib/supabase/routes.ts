@@ -84,6 +84,7 @@ export interface CommunityRoute {
   distKm: number;
   elevation: RouteElevation;
   terrain: Terrain;
+  coords: Coord[];
   userName: string;
   savedAt: string;
   avgRating: number;
@@ -117,6 +118,7 @@ export async function fetchCommunityRoutes(): Promise<CommunityRoute[]> {
       distKm: r.dist_km,
       elevation: r.elevation,
       terrain: r.terrain,
+      coords: r.coords,
       userName: r.user_name || 'Anonyme',
       savedAt: r.saved_at,
       avgRating: avg,

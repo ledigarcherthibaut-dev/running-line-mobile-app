@@ -4,7 +4,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Button } from '../../components/ui/Button';
-import { RoutePreviewSvg } from '../../components/routePreview/RoutePreviewSvg';
+import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
 import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -103,7 +103,7 @@ export function HomeScreen({ navigation }: Props) {
                 onPress={() => navigation.navigate('RouteDetail', { routeId: r.id })}
               >
                 <View style={styles.recentThumb}>
-                  <RoutePreviewSvg coords={r.coords} color={tokens.secondary} />
+                  <RouteSatellitePreview coords={r.coords} color={tokens.accent} />
                 </View>
                 <View style={styles.recentBody}>
                   <Text style={[styles.recentName, { color: tokens.text, fontFamily: fonts.display }]}>{r.name}</Text>
@@ -131,9 +131,9 @@ export function HomeScreen({ navigation }: Props) {
 function StatCard({ icon, value, label }: { icon: FeatherName; value: string; label: string }) {
   const { tokens } = useTheme();
   return (
-    <View style={[styles.statCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-      <Feather name={icon} size={20} color={tokens.text} />
-      <Text style={[styles.statValue, { color: tokens.text, fontFamily: fonts.display }]}>{value}</Text>
+    <View style={[styles.statCard, { backgroundColor: tokens.surface2 }]}>
+      <Feather name={icon} size={18} color={tokens.accent} />
+      <Text style={[styles.statValue, { color: tokens.accent, fontFamily: fonts.display }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text2 }]}>{label}</Text>
     </View>
   );
@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, marginBottom: 8 },
   heroActions: { gap: 8, marginTop: 4 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { flexBasis: '47%', flexGrow: 1, borderRadius: radii.md, padding: 14, gap: 4, borderWidth: 1 },
-  statValue: { fontSize: 20 },
+  statCard: { flexBasis: '47%', flexGrow: 1, borderRadius: radii.md, padding: 14, gap: 4 },
+  statValue: { fontSize: 24 },
   statLabel: { fontSize: 11 },
   section: { gap: 10 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

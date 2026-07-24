@@ -88,8 +88,8 @@ export function RouteResultCard({
 function Stat({ value, label }: { value: string; label: string }) {
   const { tokens } = useTheme();
   return (
-    <View style={[styles.stat, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
-      <Text style={[styles.statVal, { color: tokens.text }]}>{value}</Text>
+    <View style={[styles.stat, { backgroundColor: tokens.surface2 }]}>
+      <Text style={[styles.statVal, { color: tokens.accent }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text3 }]}>{label}</Text>
     </View>
   );
@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
   durationRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   durationText: { fontSize: 11 },
   statsRow: { flexDirection: 'row', gap: 6 },
-  stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 7, alignItems: 'center', borderWidth: 1 },
-  statVal: { fontFamily: fonts.mono, fontSize: 14, fontWeight: '700' },
+  stat: { flex: 1, borderRadius: radii.sm, paddingVertical: 9, alignItems: 'center' },
+  statVal: { fontFamily: fonts.mono, fontSize: 16, fontWeight: '800' },
   statLabel: { fontSize: 9, fontFamily: fonts.mono },
   actions: { flexDirection: 'row', gap: 8 },
   actionBtn: { flex: 1 },

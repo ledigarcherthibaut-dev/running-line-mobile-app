@@ -10,7 +10,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { fonts } from '../../theme/tokens';
 import { useGenerate } from '../../state/GenerateContext';
 import { useToast } from '../../state/ToastContext';
-import { getUserLocation, LocationError } from '../../lib/location/location';
+import { getUserLocation } from '../../lib/location/location';
 import { geocode, PlaceSuggestion } from '../../lib/api/geocode';
 import { generateDirectRoute, generateLoopRoutes, randomStartNear } from '../../lib/routing/generateRoutes';
 import { formatBRouterError } from '../../lib/routing/brouter';
@@ -46,15 +46,20 @@ export function GenerateScreen({ navigation, route }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.params]);
 
-  async function handleGeolocate() {
-    try {
-      const c = await getUserLocation();
-      setUserCoords(c);
-      showToast('Position détectée', false, 3000, 'map-pin');
-    } catch (e) {
-      showToast(e instanceof LocationError ? e.message : (e as Error).message, true);
-    }
-  }
+  /**
+   * Géolocalisation automatique dès l'arrivée sur l'écran (au lieu d'un bouton à cliquer) :
+   * sert de base par défaut si aucune adresse n'est saisie, et de zone privilégiée pour
+   * l'autocomplétion. Échec silencieux (pas de GPS/permission refusée) — l'utilisateur peut
+   * toujours saisir une adresse manuellement, generateRoutes() re-tente la géolocalisation
+   * au moment de générer si besoin.
+   */
+  useEffect(() => {
+    if (userCoords) return;
+    getUserLocation()
+      .then(setUserCoords)
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -133,14 +138,15 @@ export function GenerateScreen({ navigation, route }: Props) {
             onChangeText={setStartText}
             onSelectPlace={setStartPlace}
             placeholder="Adresse ou ville (vide = position GPS)"
+            biasCoords={userCoords}
           />
-          <Button title="Me géolocaliser" icon="map-pin" variant="secondary" onPress={handleGeolocate} />
           <AddressAutocompleteField
             label="Arrivée (optionnel)"
             value={endText}
             onChangeText={setEndText}
             onSelectPlace={setEndPlace}
             placeholder="Pour un itinéraire direct A→B"
+            biasCoords={startPlace?.coords ?? userCoords}
           />
 
           {generating && <Text style={[styles.progress, { color: tokens.text2, fontFamily: fonts.mono }]}>{progressMsg}</Text>}

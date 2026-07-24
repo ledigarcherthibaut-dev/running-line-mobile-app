@@ -217,8 +217,8 @@ export function RouteDetailScreen() {
 function Stat({ value, label }: { value: string; label: string }) {
   const { tokens } = useTheme();
   return (
-    <View style={[styles.stat, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
-      <Text style={[styles.statVal, { color: tokens.text, fontFamily: fonts.mono }]}>{value}</Text>
+    <View style={[styles.stat, { backgroundColor: tokens.surface2 }]}>
+      <Text style={[styles.statVal, { color: tokens.accent, fontFamily: fonts.mono }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text3, fontFamily: fonts.mono }]}>{label}</Text>
     </View>
   );
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
   durationRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -6 },
   durationText: { fontSize: 11 },
   statsRow: { flexDirection: 'row', gap: 6 },
-  stat: { flex: 1, borderRadius: radii.xs, paddingVertical: 8, alignItems: 'center', borderWidth: 1 },
-  statVal: { fontSize: 14, fontWeight: '700' },
+  stat: { flex: 1, borderRadius: radii.sm, paddingVertical: 9, alignItems: 'center' },
+  statVal: { fontSize: 16, fontWeight: '800' },
   statLabel: { fontSize: 9 },
   actions: { flexDirection: 'row', gap: 8 },
   actionBtn: { flex: 1 },

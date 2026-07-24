@@ -20,6 +20,33 @@ export function calcDist(coords: Coord[]): number {
   return d;
 }
 
+export interface MapRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+/**
+ * Région de carte englobant tous les points donnés, avec une marge — utilisée comme
+ * `initialRegion` pour que la carte s'affiche déjà centrée sur le contenu réel au premier
+ * rendu, plutôt qu'une vue générique le temps qu'un fitToCoordinates() impératif s'exécute.
+ */
+export function regionFromCoords(points: LatLng[], paddingFactor = 1.4): MapRegion {
+  const lats = points.map((p) => p.lat);
+  const lngs = points.map((p) => p.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: Math.max((maxLat - minLat) * paddingFactor, 0.01),
+    longitudeDelta: Math.max((maxLng - minLng) * paddingFactor, 0.01),
+  };
+}
+
 /** index.html:4193-4199 — point à `km` km de `o`, sur le cap `b` (degrés). */
 export function destPoint(o: LatLng, km: number, b: number): LatLng {
   const R = 6371;

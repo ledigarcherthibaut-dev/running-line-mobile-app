@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -15,13 +15,14 @@ import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
 import { useGarminExport } from '../../hooks/useGarminExport';
+import { regionFromCoords } from '../../lib/routing/geo';
 import { saveRoute } from '../../lib/supabase/routes';
 import type { GenerateStackParamList } from '../../navigation/types';
 import { GeneratedRoute } from '../../types';
 
 type Props = NativeStackScreenProps<GenerateStackParamList, 'GenerateResults'>;
 
-const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
+const FALLBACK_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
 
 /** Port du panneau résultats (index.html:96-153, 4348-4373) — cartes de résultats + carte. */
 /**
@@ -56,6 +57,11 @@ export function GenerateResultsScreen({}: Props) {
   const [saveTarget, setSaveTarget] = useState<GeneratedRoute | null>(null);
   const { garminModalVisible, garminFilename, closeGarminModal, exportToGarmin } = useGarminExport();
   const recommendedIdx = findRecommendedIndex(results, distance);
+  const initialRegion = useMemo(() => {
+    const points = results.flatMap((r) => r.coords.map((c) => ({ lat: c[1], lng: c[0] })));
+    return points.length ? regionFromCoords(points) : FALLBACK_REGION;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function selectRoute(i: number) {
     setSelectedIdx(i);
@@ -87,7 +93,7 @@ export function GenerateResultsScreen({}: Props) {
       <View style={styles.mapArea}>
         <RouteMap
           ref={mapRef}
-          initialRegion={DEFAULT_REGION}
+          initialRegion={initialRegion}
           routes={results.map((r, i) => ({ id: `r${i}`, coords: r.coords, color: r.color || tokens.secondary }))}
         />
       </View>

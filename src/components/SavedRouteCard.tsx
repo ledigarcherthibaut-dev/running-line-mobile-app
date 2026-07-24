@@ -3,7 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
 import { hapticSelect } from '../lib/haptics';
-import { RoutePreviewSvg } from './routePreview/RoutePreviewSvg';
+import { RouteSatellitePreview } from './routePreview/RouteSatellitePreview';
 import { SavedRoute } from '../types';
 
 /** Port de buildSavedHTML (index.html:3604-3667). */
@@ -36,24 +36,24 @@ export function SavedRouteCard({
   return (
     <Pressable onPress={onOpen} style={[styles.card, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
       <View style={styles.preview}>
-        <RoutePreviewSvg coords={route.coords} color={tokens.secondary} />
-        <View style={[styles.colorBar, { backgroundColor: tokens.secondary }]} />
+        <RouteSatellitePreview coords={route.coords} color={tokens.accent} />
         {route.isFav && (
           <View style={styles.favBadge}>
             <Feather name="star" size={10} color={tokens.fav} />
-            <Text style={styles.favBadgeText}>Favori</Text>
           </View>
         )}
-        <Text style={styles.previewMeta}>
-          {route.distKm.toFixed(1)} km · D+{route.elevation.totalAscent}m
-        </Text>
       </View>
 
       <View style={styles.body}>
         <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]} numberOfLines={1}>
           {route.name}
         </Text>
-        <Text style={[styles.meta, { color: tokens.text3 }]}>{route.terrain || 'mixte'} · sauvegardé</Text>
+        <View style={styles.statsRow}>
+          <Text style={[styles.statVal, { color: tokens.accent, fontFamily: fonts.mono }]}>{route.distKm.toFixed(1)} km</Text>
+          <View style={[styles.statSep, { backgroundColor: tokens.border2 }]} />
+          <Text style={[styles.statVal, { color: tokens.accent, fontFamily: fonts.mono }]}>D+{route.elevation.totalAscent}m</Text>
+          <Text style={[styles.meta, { color: tokens.text3 }]}> · {route.terrain || 'mixte'}</Text>
+        </View>
 
         <View style={styles.actions}>
           <ActionBtn
@@ -114,25 +114,21 @@ function ActionBtn({
 
 const styles = StyleSheet.create({
   card: { borderRadius: radii.md, overflow: 'hidden', borderWidth: 1 },
-  preview: { height: 90, backgroundColor: '#080d12', justifyContent: 'flex-end', padding: 8 },
-  colorBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
+  preview: { height: 130 },
   favBadge: {
     position: 'absolute',
     top: 8,
     right: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: radii.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    padding: 6,
   },
-  favBadgeText: { fontSize: 10, color: '#fff', fontFamily: fonts.mono },
-  previewMeta: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontFamily: fonts.mono, backgroundColor: 'rgba(0,0,0,0.35)', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  body: { padding: 12, gap: 4 },
-  name: { fontSize: 14 },
-  meta: { fontSize: 10, fontFamily: fonts.mono, marginBottom: 6 },
-  actions: { flexDirection: 'row', gap: 6 },
+  body: { padding: 12, gap: 6 },
+  name: { fontSize: 15 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statVal: { fontSize: 13, fontWeight: '700' },
+  statSep: { width: 3, height: 3, borderRadius: 1.5 },
+  meta: { fontSize: 11 },
+  actions: { flexDirection: 'row', gap: 6, marginTop: 2 },
   actionBtn: { width: 40, height: 40, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
 });
