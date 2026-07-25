@@ -18,6 +18,9 @@ export interface ThemeTokens {
   accent: string;
   accentGlow: string;
   accentDim: string;
+  /** Couleur de texte/icône fixe pour tout élément posé sur un fond `accent` plein (lime clair
+   * dans les deux thèmes) — `text`/`bg` sont trop clairs dans un des deux thèmes pour rester lisibles. */
+  onAccent: string;
   secondary: string;
   secondaryDim: string;
   tertiary: string;
@@ -46,6 +49,7 @@ const brand = {
   danger: '#E53E3E',
   fav: '#F59E0B',
   success: '#22C55E',
+  onAccent: '#101215',
 } as const;
 
 export const lightTokens: ThemeTokens = {
@@ -63,6 +67,7 @@ export const lightTokens: ThemeTokens = {
   accent: brand.accent,
   accentGlow: 'rgba(240,251,107,.30)',
   accentDim: 'rgba(240,251,107,.22)',
+  onAccent: brand.onAccent,
   secondary: brand.secondary,
   secondaryDim: 'rgba(190,163,254,.22)',
   tertiary: brand.tertiary,
@@ -97,6 +102,7 @@ export const darkTokens: ThemeTokens = {
   accent: brand.accent,
   accentGlow: 'rgba(240,251,107,.30)',
   accentDim: 'rgba(240,251,107,.18)',
+  onAccent: brand.onAccent,
   secondary: brand.secondary,
   secondaryDim: 'rgba(190,163,254,.22)',
   tertiary: brand.tertiary,

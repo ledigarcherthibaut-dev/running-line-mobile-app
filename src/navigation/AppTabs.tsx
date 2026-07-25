@@ -37,7 +37,7 @@ function GenerateTabButton({ onPress, accessibilityState }: BottomTabBarButtonPr
           focused && styles.elevatedButtonFocused,
         ]}
       >
-        <Feather name="zap" size={26} color={tokens.text} />
+        <Feather name="zap" size={26} color={tokens.onAccent} />
       </Pressable>
     </Pressable>
   );

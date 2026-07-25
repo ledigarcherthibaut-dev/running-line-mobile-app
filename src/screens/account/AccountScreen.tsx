@@ -174,7 +174,7 @@ export function AccountScreen() {
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.avatar, { backgroundColor: tokens.accent }]}>
-          <Text style={[styles.avatarText, { color: tokens.text, fontFamily: fonts.display }]}>{initial}</Text>
+          <Text style={[styles.avatarText, { color: tokens.onAccent, fontFamily: fonts.display }]}>{initial}</Text>
         </View>
         <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{profile.name || '—'}</Text>
         <Text style={[styles.email, { color: tokens.text3 }]}>{session.user.email}</Text>

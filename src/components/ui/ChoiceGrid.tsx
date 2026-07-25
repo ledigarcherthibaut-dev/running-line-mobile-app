@@ -43,7 +43,7 @@ export function ChoiceGrid<T extends string>({
           >
             {selected && (
               <View style={[styles.check, { backgroundColor: tokens.accent }]}>
-                <Feather name="check" size={10} color={tokens.bg} />
+                <Feather name="check" size={10} color={tokens.onAccent} />
               </View>
             )}
             <Feather name={opt.icon} size={22} color={tokens.text} />

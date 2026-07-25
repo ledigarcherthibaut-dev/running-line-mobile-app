@@ -256,8 +256,8 @@ function TabButton({ icon, label, active, onPress }: { icon: FeatherName; label:
       onPress={onPress}
       style={[styles.tabBtn, { backgroundColor: tokens.surface2 }, active && { backgroundColor: tokens.accent }]}
     >
-      <Feather name={icon} size={14} color={active ? tokens.text : tokens.text2} />
-      <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.text, fontWeight: '700' }]}>{label}</Text>
+      <Feather name={icon} size={14} color={active ? tokens.onAccent : tokens.text2} />
+      <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.onAccent, fontWeight: '700' }]}>{label}</Text>
     </Pressable>
   );
 }

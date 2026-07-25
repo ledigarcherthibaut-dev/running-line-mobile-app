@@ -90,11 +90,11 @@ export function RegisterScreen({ navigation }: Props) {
                   style={[
                     styles.themeCard,
                     { backgroundColor: tokens.surface2, borderColor: 'transparent' },
-                    themeChoice === opt.value && { borderColor: tokens.text, backgroundColor: tokens.accent },
+                    themeChoice === opt.value && { borderColor: tokens.onAccent, backgroundColor: tokens.accent },
                   ]}
                 >
-                  <Feather name={opt.icon} size={20} color={tokens.text} />
-                  <Text style={[styles.themeLabel, { color: tokens.text }]}>{opt.label}</Text>
+                  <Feather name={opt.icon} size={20} color={themeChoice === opt.value ? tokens.onAccent : tokens.text} />
+                  <Text style={[styles.themeLabel, { color: themeChoice === opt.value ? tokens.onAccent : tokens.text }]}>{opt.label}</Text>
                 </Pressable>
               ))}
             </View>

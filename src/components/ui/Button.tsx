@@ -28,7 +28,7 @@ export function Button({
   const { tokens } = useTheme();
   const isPrimary = variant === 'primary';
   const isSecondary = variant === 'secondary';
-  const textColor = isPrimary || isSecondary ? tokens.text : tokens.text2;
+  const textColor = isPrimary ? tokens.onAccent : isSecondary ? tokens.text : tokens.text2;
 
   return (
     <Pressable

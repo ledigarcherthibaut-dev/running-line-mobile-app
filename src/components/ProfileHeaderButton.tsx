@@ -27,7 +27,7 @@ export function ProfileHeaderButton() {
       accessibilityRole="button"
       accessibilityLabel="Ouvrir mon compte"
     >
-      <Text style={[styles.text, { color: tokens.text, fontFamily: fonts.display }]}>{initial}</Text>
+      <Text style={[styles.text, { color: tokens.onAccent, fontFamily: fonts.display }]}>{initial}</Text>
     </Pressable>
   );
 }
