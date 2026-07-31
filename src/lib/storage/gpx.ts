@@ -34,7 +34,11 @@ export async function shareRouteAsGPX(route: Pick<GeneratedRoute, 'coords' | 'na
 
   await Sharing.shareAsync(file.uri, {
     mimeType: 'application/gpx+xml',
-    dialogTitle: `Envoyer "${route.name}"`,
+    // Garmin Connect ne s'inscrit pas comme destinataire de partage sur Android/iOS — il
+    // n'apparaîtra jamais dans cette liste, ce n'est pas un bug. Le libellé annonce donc
+    // « Enregistrer » plutôt que « Envoyer » pour ne pas laisser croire que Garmin y figure ;
+    // GarminExportModal guide ensuite vers l'import (web ou appli) une fois le fichier enregistré.
+    dialogTitle: `Enregistrer "${route.name}.gpx"`,
   });
 }
 
