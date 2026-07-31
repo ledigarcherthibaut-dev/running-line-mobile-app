@@ -67,6 +67,61 @@ export function loopWpts(o: LatLng, km: number, a: number, s = 1): LatLng[] {
   return [o, p1, p2, p3, o];
 }
 
+/**
+ * Distance perpendiculaire d'un point à un segment, en km — approximation planaire (projection
+ * équirectangulaire locale autour de `a`), largement suffisante à l'échelle d'un parcours running.
+ */
+function pointSegmentDistanceKm(p: LatLng, a: LatLng, b: LatLng): number {
+  const R = 6371;
+  const cosLat = Math.cos((a.lat * Math.PI) / 180);
+  const toXY = (pt: LatLng) => ({
+    x: ((pt.lng - a.lng) * Math.PI * R * cosLat) / 180,
+    y: ((pt.lat - a.lat) * Math.PI * R) / 180,
+  });
+  const pxy = toXY(p);
+  const bxy = toXY(b);
+  const lenSq = bxy.x ** 2 + bxy.y ** 2;
+  if (lenSq === 0) return Math.hypot(pxy.x, pxy.y);
+  const t = Math.max(0, Math.min(1, (pxy.x * bxy.x + pxy.y * bxy.y) / lenSq));
+  return Math.hypot(pxy.x - t * bxy.x, pxy.y - t * bxy.y);
+}
+
+/** Algorithme de Ramer-Douglas-Peucker — réduit une trace dense à ses points les plus significatifs. */
+function douglasPeucker(points: LatLng[], toleranceKm: number): LatLng[] {
+  if (points.length < 3) return points;
+  let maxDist = 0;
+  let splitIndex = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = pointSegmentDistanceKm(points[i], first, last);
+    if (d > maxDist) {
+      maxDist = d;
+      splitIndex = i;
+    }
+  }
+  if (maxDist <= toleranceKm) return [first, last];
+  const left = douglasPeucker(points.slice(0, splitIndex + 1), toleranceKm);
+  const right = douglasPeucker(points.slice(splitIndex), toleranceKm);
+  return left.slice(0, -1).concat(right);
+}
+
+/**
+ * Simplifie une trace GPX dense (des centaines de points) en une poignée de points de contrôle
+ * modifiables — augmente progressivement la tolérance jusqu'à tenir sous `maxPoints`, plutôt que
+ * de fixer une tolérance unique qui donnerait trop ou trop peu de points selon la longueur du tracé.
+ */
+export function simplifyToWaypoints(points: LatLng[], maxPoints = 20): LatLng[] {
+  if (points.length <= maxPoints) return points;
+  let tolerance = 0.008;
+  let result = points;
+  for (let i = 0; i < 25 && result.length > maxPoints; i++) {
+    result = douglasPeucker(points, tolerance);
+    tolerance *= 1.6;
+  }
+  return result.length >= 2 ? result : [points[0], points[points.length - 1]];
+}
+
 /** index.html:4228-4236 */
 export function analyzeElevation(coords: Coord[]): RouteElevation {
   const elev = coords.map((c) => c[2] || 0);

@@ -71,15 +71,26 @@ export function GenerateScreen({ navigation, route }: Props) {
 
   const translateY = useRef(new Animated.Value(0)).current;
   const dragStartRef = useRef(0);
+  /**
+   * PanResponder.create() n'est appelé qu'une fois (useRef) : ses callbacks referment sur les
+   * valeurs de `collapsed`/`maxTranslate` du tout premier rendu et ne voient plus jamais leurs
+   * mises à jour — c'était la cause du volet qui « sautait » après la première ouverture/fermeture.
+   * On lit donc l'état courant via des refs tenues à jour à chaque rendu plutôt que par closure.
+   */
+  const collapsedRef = useRef(collapsed);
+  collapsedRef.current = collapsed;
+  const maxTranslateRef = useRef(maxTranslate);
+  maxTranslateRef.current = maxTranslate;
 
   function snapTo(toCollapsed: boolean) {
     setCollapsed(toCollapsed);
     if (toCollapsed) Keyboard.dismiss();
     Animated.spring(translateY, {
-      toValue: toCollapsed ? maxTranslate : 0,
+      toValue: toCollapsed ? maxTranslateRef.current : 0,
       useNativeDriver: true,
-      bounciness: 4,
+      bounciness: 0,
       speed: 14,
+      overshootClamping: true,
     }).start();
   }
 
@@ -87,21 +98,24 @@ export function GenerateScreen({ navigation, route }: Props) {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        dragStartRef.current = collapsed ? maxTranslate : 0;
-        translateY.stopAnimation();
+        // Valeur réelle au moment du saisissement (et non une valeur supposée d'après l'état) —
+        // capture correctement une position interrompue en plein vol par un nouveau geste.
+        translateY.stopAnimation((value) => {
+          dragStartRef.current = value;
+        });
       },
       onPanResponderMove: (_e, g) => {
-        const next = Math.min(Math.max(dragStartRef.current + g.dy, 0), maxTranslate);
+        const next = Math.min(Math.max(dragStartRef.current + g.dy, 0), maxTranslateRef.current);
         translateY.setValue(next);
       },
       onPanResponderRelease: (_e, g) => {
         const isTap = Math.abs(g.dy) < 6 && Math.abs(g.dx) < 6;
         if (isTap) {
-          snapTo(!collapsed);
+          snapTo(!collapsedRef.current);
           return;
         }
         const current = dragStartRef.current + g.dy;
-        const shouldCollapse = current > maxTranslate * COLLAPSE_RATIO || g.vy > FLICK_VELOCITY;
+        const shouldCollapse = current > maxTranslateRef.current * COLLAPSE_RATIO || g.vy > FLICK_VELOCITY;
         snapTo(shouldCollapse);
       },
     })
