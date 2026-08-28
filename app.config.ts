@@ -62,6 +62,9 @@ const config: ExpoConfig = {
         resizeMode: 'contain',
       },
     ],
+    // Contourne un timeout récurrent de jitpack.io lors de la résolution Gradle d'une plage de
+    // version bouncycastle (dépendance transitive d'expo-updates) — voir le plugin pour le détail.
+    './plugins/withBouncyCastleFix',
   ],
 };
 
