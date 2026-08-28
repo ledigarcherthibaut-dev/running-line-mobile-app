@@ -25,6 +25,11 @@ export interface ThemeTokens {
   secondaryDim: string;
   tertiary: string;
   tertiaryDim: string;
+  /** Lime historique de la marque — plus utilisé comme accent principal, mais réintroduit pour
+   * les détails (valeurs de stats, lignes de graphique, badges) : un clin d'œil à l'identité
+   * d'origine sans revenir à du "lime partout". */
+  highlight: string;
+  highlightDim: string;
   sky: string;
   skyDim: string;
   energy: string;
@@ -49,7 +54,8 @@ const brand = {
   danger: '#B23B2E', // rouge brique mat
   fav: '#D4A24C', // or chaud (étoiles/favoris)
   success: '#3F7256', // même vert forêt que secondary — cohérence de famille
-  onAccent: '#17130E', // near-black chaud, contraste garanti sur l'accent ambre
+  onAccent: '#17130E', // near-black chaud, contraste garanti sur l'accent ambre et le lime
+  highlight: '#F0FB6B', // lime historique — détails uniquement (voir commentaire ThemeTokens)
 } as const;
 
 export const lightTokens: ThemeTokens = {
@@ -72,6 +78,8 @@ export const lightTokens: ThemeTokens = {
   secondaryDim: 'rgba(63,114,86,.20)',
   tertiary: brand.tertiary,
   tertiaryDim: 'rgba(139,143,163,.20)',
+  highlight: brand.highlight,
+  highlightDim: 'rgba(240,251,107,.20)',
   sky: brand.sky,
   skyDim: 'rgba(91,135,166,.15)',
   energy: brand.energy,
@@ -107,6 +115,8 @@ export const darkTokens: ThemeTokens = {
   secondaryDim: 'rgba(63,114,86,.24)',
   tertiary: brand.tertiary,
   tertiaryDim: 'rgba(139,143,163,.22)',
+  highlight: brand.highlight,
+  highlightDim: 'rgba(240,251,107,.18)',
   sky: brand.sky,
   skyDim: 'rgba(91,135,166,.18)',
   energy: brand.energy,

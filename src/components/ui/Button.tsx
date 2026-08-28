@@ -1,10 +1,15 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, IconName } from './Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 
 type Variant = 'primary' | 'secondary' | 'text';
 type FeatherName = IconName;
+
+/** Dégradé diagonal clair→sombre sur l'ambre — donne du relief au bouton principal plutôt
+ * qu'un aplat plat (déjà utilisé partout ailleurs). */
+const PRIMARY_GRADIENT = ['#E3B569', '#C9973F', '#A67A2E'] as const;
 
 export function Button({
   title,
@@ -36,7 +41,6 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
-        isPrimary && { backgroundColor: tokens.accent },
         isSecondary && { backgroundColor: tokens.surface2, borderWidth: 1, borderColor: tokens.border2 },
         variant === 'text' && styles.text,
         (disabled || loading) && styles.disabled,
@@ -44,6 +48,7 @@ export function Button({
         style,
       ]}
     >
+      {isPrimary && <LinearGradient colors={PRIMARY_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />}
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
@@ -73,6 +78,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
+    overflow: 'hidden',
   },
   text: { backgroundColor: 'transparent', height: 'auto', paddingVertical: 8 },
   disabled: { opacity: 0.5 },

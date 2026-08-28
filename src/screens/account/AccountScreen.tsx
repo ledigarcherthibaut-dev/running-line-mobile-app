@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, IconName } from '../../components/ui/Icon';
 import { ChoiceGrid } from '../../components/ui/ChoiceGrid';
 import { TextField } from '../../components/ui/TextField';
@@ -184,6 +185,13 @@ export function AccountScreen() {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
+      <LinearGradient
+        colors={[`${tokens.tertiary}1F`, 'transparent', `${tokens.tertiary}12`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.avatar, { backgroundColor: tokens.accent, borderColor: tokens.secondary }]}>
           <Text style={[styles.avatarText, { color: tokens.onAccent, fontFamily: fonts.display }]}>{initial}</Text>

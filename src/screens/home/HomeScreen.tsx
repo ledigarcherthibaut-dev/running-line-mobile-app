@@ -39,6 +39,14 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
+      {/* Sheen "chrome/fumé" diagonal sur tout l'écran — le fond était un aplat uni jusqu'ici. */}
+      <LinearGradient
+        colors={[`${tokens.tertiary}1F`, 'transparent', `${tokens.tertiary}12`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={tokens.text} />}
@@ -60,7 +68,7 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.statsGrid}>
-          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.accent} />
+          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.highlight} />
           <StatCard icon="bar-chart-2" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" color={tokens.secondary} />
           <StatCard icon="flag" value={String(savedRoutes.length)} label="Parcours créés" color={tokens.sky} />
           <StatCard icon="heart" value={String(favCount)} label="Favoris" color={tokens.energy} />

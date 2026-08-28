@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, IconName } from '../../components/ui/Icon';
 import { SavedRouteCard } from '../../components/SavedRouteCard';
 import { RateRouteModal } from '../../components/RateRouteModal';
@@ -63,6 +64,13 @@ export function MyRoutesScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
+      <LinearGradient
+        colors={[`${tokens.tertiary}1F`, 'transparent', `${tokens.tertiary}12`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <View style={styles.filterRow}>
         {FILTERS.map((f) => (
           <Pressable
