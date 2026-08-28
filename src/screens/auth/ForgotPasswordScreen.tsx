@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -19,6 +19,11 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const goBackTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => {
+    if (goBackTimer.current) clearTimeout(goBackTimer.current);
+  }, []);
 
   async function handleSubmit() {
     setError('');
@@ -34,7 +39,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       return;
     }
     setSent(true);
-    setTimeout(() => navigation.goBack(), 2000);
+    goBackTimer.current = setTimeout(() => navigation.goBack(), 2000);
   }
 
   return (

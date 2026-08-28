@@ -59,10 +59,16 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
     }
     const userId = session.user.id;
     let cancelled = false;
+    // Le fetch réseau fait autorité sur le cache local : si le cache (AsyncStorage) répond
+    // après que refresh() a déjà posé des données fraîches, il ne doit pas les écraser avec
+    // d'anciennes valeurs — d'où le drapeau plutôt qu'un simple fire-and-forget des deux en parallèle.
+    let refreshed = false;
     readCache<SavedRoute[]>(cacheKeyFor(userId)).then((cached) => {
-      if (!cancelled && cached) setSavedRoutes(cached);
+      if (!cancelled && cached && !refreshed) setSavedRoutes(cached);
     });
-    refresh();
+    refresh().finally(() => {
+      refreshed = true;
+    });
     return () => {
       cancelled = true;
     };

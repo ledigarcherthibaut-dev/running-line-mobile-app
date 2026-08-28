@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -60,6 +60,11 @@ export function AccountScreen() {
     });
   }, []);
 
+  const savePhysicalTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => {
+    if (savePhysicalTimer.current) clearTimeout(savePhysicalTimer.current);
+  }, []);
+
   if (!session?.user || !profile) return null;
 
   async function toggleReminder(value: boolean) {
@@ -103,6 +108,13 @@ export function AccountScreen() {
     setSavingPhysical(false);
     if (error) showToast(error.message, true);
     else if (data) setProfile(data as UserProfile);
+  }
+
+  /** VMA et FC max déclenchent chacun un blur à la suite (tab entre les deux champs) — un léger
+   * débounce évite deux sauvegardes quasi simultanées du même profil. */
+  function scheduleSavePhysical() {
+    if (savePhysicalTimer.current) clearTimeout(savePhysicalTimer.current);
+    savePhysicalTimer.current = setTimeout(handleSavePhysical, 250);
   }
 
   async function handleUpdatePassword() {
@@ -195,10 +207,10 @@ export function AccountScreen() {
         <Section title="Données physiques (optionnel)">
           <View style={styles.physicalRow}>
             <View style={styles.physicalField}>
-              <TextField label="VMA (km/h)" value={vma} onChangeText={setVma} onBlur={handleSavePhysical} keyboardType="numeric" placeholder="—" />
+              <TextField label="VMA (km/h)" value={vma} onChangeText={setVma} onBlur={scheduleSavePhysical} keyboardType="numeric" placeholder="—" />
             </View>
             <View style={styles.physicalField}>
-              <TextField label="FC max (bpm)" value={fcMax} onChangeText={setFcMax} onBlur={handleSavePhysical} keyboardType="numeric" placeholder="—" />
+              <TextField label="FC max (bpm)" value={fcMax} onChangeText={setFcMax} onBlur={scheduleSavePhysical} keyboardType="numeric" placeholder="—" />
             </View>
           </View>
           {savingPhysical && <Text style={[styles.saving, { color: tokens.text3 }]}>Enregistrement…</Text>}
@@ -250,7 +262,8 @@ export function AccountScreen() {
             style={{ borderColor: 'rgba(229,62,62,0.3)' }}
           />
           <Text style={[styles.dangerHint, { color: tokens.text3 }]}>
-            Supprime tes parcours, notes et ton profil. Contacte-nous pour la suppression complète de ton compte de connexion.
+            Supprime tes parcours, notes et ton profil. Le compte de connexion (email et mot de passe) n'est pas supprimé
+            automatiquement — il ne redonne accès à aucune donnée une fois ceci fait.
           </Text>
         </View>
       </ScrollView>

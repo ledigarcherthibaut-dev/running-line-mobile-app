@@ -1,11 +1,10 @@
 import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { RouteMap } from '../../components/map/RouteMap';
-import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
@@ -18,12 +17,13 @@ import { useRoutes } from '../../state/RoutesContext';
 import { useToast } from '../../state/ToastContext';
 import { useGarminExport } from '../../hooks/useGarminExport';
 import { estimateDurationLabel } from '../../lib/routing/pace';
+import { regionFromCoords, type MapRegion } from '../../lib/routing/geo';
 import { fetchCommunityRouteDetail, saveRoute, submitRating } from '../../lib/supabase/routes';
 import type { RouteDetailParams } from '../../navigation/types';
 import { SavedRoute } from '../../types';
 
 type RouteDetailRouteProp = RouteProp<{ RouteDetail: RouteDetailParams }, 'RouteDetail'>;
-const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
+const FALLBACK_REGION: MapRegion = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
 
 /** Détail d'un parcours possédé (Mes parcours) ou communautaire (Explorer) — même écran, deux sources de données. */
 export function RouteDetailScreen() {
@@ -33,7 +33,6 @@ export function RouteDetailScreen() {
   const { session, profile } = useAuth();
   const { savedRoutes, toggleFavorite, togglePublic, rename, remove, refresh } = useRoutes();
   const { showToast } = useToast();
-  const mapRef = useRef<RouteMapHandle>(null);
   const [communityRoute, setCommunityRoute] = useState<SavedRoute | null>(null);
   const [loading, setLoading] = useState(false);
   const [rateVisible, setRateVisible] = useState(false);
@@ -59,10 +58,14 @@ export function RouteDetailScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.routeId, owned]);
 
-  useEffect(() => {
-    if (route) {
-      requestAnimationFrame(() => mapRef.current?.fitToCoordinates(route.coords.map((c) => ({ lat: c[1], lng: c[0] }))));
-    }
+  /**
+   * Région calculée directement à partir du tracé plutôt qu'une vue France par défaut suivie
+   * d'un fitToCoordinates() après coup — sinon flash visible de la mauvaise région à chaque
+   * ouverture (même défaut déjà corrigé sur l'écran de résultats de génération).
+   */
+  const initialRegion = useMemo<MapRegion>(() => {
+    if (!route) return FALLBACK_REGION;
+    return regionFromCoords(route.coords.map((c) => ({ lat: c[1], lng: c[0] })));
   }, [route]);
 
   async function handleSaveToMine() {
@@ -139,8 +142,7 @@ export function RouteDetailScreen() {
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <View style={styles.mapArea}>
         <RouteMap
-          ref={mapRef}
-          initialRegion={DEFAULT_REGION}
+          initialRegion={initialRegion}
           routes={[{ id: 'r', coords: route.coords, color: tokens.secondary }]}
         />
       </View>

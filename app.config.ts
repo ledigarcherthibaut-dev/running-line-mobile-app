@@ -53,7 +53,9 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#F5F0EF',
+        // Fond du thème sombre (défaut de l'app depuis la refonte) — l'ancienne valeur crème
+        // était celle du thème clair et flashait avant chaque apparition de l'UI sombre.
+        backgroundColor: '#101215',
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',

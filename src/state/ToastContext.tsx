@@ -32,7 +32,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       else hapticSuccess();
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
       hideTimer.current = setTimeout(() => {
-        Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => setToast(null));
+        Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }).start(({ finished }) => {
+          // `finished` est false si un nouveau showToast() a interrompu ce fade-out (nouvelle
+          // animation démarrée sur la même valeur) — sans cette vérification, le toast qui vient
+          // d'apparaître était aussitôt effacé par le callback de l'ancien.
+          if (finished) setToast(null);
+        });
       }, ms);
     },
     [opacity]

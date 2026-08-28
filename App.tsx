@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ThemeProfileSync } from './src/theme/ThemeProfileSync';
 import { AuthProvider } from './src/state/AuthContext';
 import { RoutesProvider } from './src/state/RoutesContext';
 import { ToastProvider } from './src/state/ToastContext';
@@ -40,6 +41,7 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
+          <ThemeProfileSync />
           <RoutesProvider>
             <ToastProvider>
               <RootNavigator />

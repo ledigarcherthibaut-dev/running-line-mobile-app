@@ -17,6 +17,13 @@ type ThemeContextValue = {
   tokens: ThemeTokens;
   setMode: (mode: ThemeMode) => void;
   cycleMode: () => void;
+  /** true une fois la lecture AsyncStorage terminée (trouvée ou non) — sert à savoir quand il
+   * est possible de décider si une préférence distante (profil) doit être appliquée. */
+  localPreferenceLoaded: boolean;
+  /** true si CET appareil a déjà un choix de thème (stocké ou fait dans la session) — permet à
+   * un connecteur externe de n'appliquer le thème du profil Supabase que sur un appareil neuf
+   * (nouvelle installation/nouveau téléphone), jamais par-dessus un choix local existant. */
+  hasLocalPreference: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -30,17 +37,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
   // Sombre par défaut (refonte UI) tant que l'utilisateur n'a pas choisi explicitement — le clair reste disponible via le sélecteur du Compte.
   const [mode, setModeState] = useState<ThemeMode>('dark');
+  const [localPreferenceLoaded, setLocalPreferenceLoaded] = useState(false);
+  const [hasLocalPreference, setHasLocalPreference] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((stored) => {
       if (stored === 'dark' || stored === 'light' || stored === 'auto') {
         setModeState(stored);
+        setHasLocalPreference(true);
       }
+      setLocalPreferenceLoaded(true);
     });
   }, []);
 
   const setMode = useCallback((next: ThemeMode) => {
     setModeState(next);
+    setHasLocalPreference(true);
     AsyncStorage.setItem(THEME_STORAGE_KEY, next).catch(() => {});
   }, []);
 
@@ -52,8 +64,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const tokens = resolvedScheme === 'light' ? lightTokens : darkTokens;
 
   const value = useMemo(
-    () => ({ mode, resolvedScheme, tokens, setMode, cycleMode }),
-    [mode, resolvedScheme, tokens, setMode, cycleMode],
+    () => ({ mode, resolvedScheme, tokens, setMode, cycleMode, localPreferenceLoaded, hasLocalPreference }),
+    [mode, resolvedScheme, tokens, setMode, cycleMode, localPreferenceLoaded, hasLocalPreference],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

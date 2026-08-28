@@ -26,7 +26,9 @@ export function RegisterScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [themeChoice, setThemeChoice] = useState<ThemeMode>('auto');
+  // Aligné sur le défaut réel de ThemeContext (sombre) — sinon valider sans toucher au
+  // sélecteur appliquait silencieusement 'auto' à la place du sombre par défaut de l'app.
+  const [themeChoice, setThemeChoice] = useState<ThemeMode>('dark');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const strength = passwordStrength(password);
