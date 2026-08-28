@@ -1,24 +1,98 @@
 import { GeneratedRoute, LatLng, Terrain } from '../../types';
 import { ROUTE_COLORS, ROUTE_NAMES } from '../../theme/tokens';
-import { analyzeElevation, calcDist, destPoint, loopWpts, routesSimilar } from './geo';
+import { analyzeElevation, bearingBetween, calcDist, destPoint, loopWpts, routesSimilar } from './geo';
 import { analyzeTrailPurity, featureToCoords, fetchBRouterMultiPoint, getBRouterProfile } from './brouter';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export type GenerateProgress = (step: number, message: string) => void;
 
-/** Port de la branche "itinéraire direct" de generateRoutes (index.html:4900-4919). */
-export async function generateDirectRoute(start: LatLng, end: LatLng, terrain: Terrain): Promise<GeneratedRoute> {
-  const profile = getBRouterProfile(terrain);
-  const feat = await fetchBRouterMultiPoint([start, end], profile);
+interface DirectAttempt {
+  coords: GeneratedRoute['coords'];
+  elevation: GeneratedRoute['elevation'];
+  distKm: number;
+  purity: GeneratedRoute['purity'];
+}
+
+async function routeViaPoints(points: LatLng[], profile: string, isTrail: boolean): Promise<DirectAttempt> {
+  const feat = await fetchBRouterMultiPoint(points, profile);
   const coords = featureToCoords(feat);
   return {
     coords,
     elevation: analyzeElevation(coords),
     distKm: calcDist(coords),
-    name: 'Itinéraire Direct',
-    purity: terrain === 'trail' ? analyzeTrailPurity(feat) : null,
+    purity: isTrail ? analyzeTrailPurity(feat) : null,
   };
+}
+
+function scoreAttempt(a: DirectAttempt, targetKm: number, targetDP: number, isTrail: boolean): number {
+  const dErr = Math.abs(a.distKm - targetKm) / targetKm;
+  const eErr = Math.abs(a.elevation.totalAscent - targetDP) / Math.max(targetDP, 1);
+  const purityPenalty = isTrail && a.purity ? Math.max(0, a.purity.pct - 30) / 100 : 0;
+  return dErr * 2 + eErr + purityPenalty;
+}
+
+/**
+ * Itinéraire A→B tenant compte de la distance/du dénivelé demandés : BRouter route toujours le
+ * chemin le plus efficace entre deux points, donc pour allonger le trajet jusqu'à la distance
+ * cible on le fait passer par un point de détour (perpendiculaire au trajet direct, à mi-chemin),
+ * dont l'amplitude est corrigée à chaque tentative comme la branche boucle ci-dessous — pas de
+ * paramètre BRouter natif pour "vise telle distance" sur un point à point.
+ */
+export async function generateDirectRoute(
+  start: LatLng,
+  end: LatLng,
+  terrain: Terrain,
+  targetKm?: number,
+  targetDP?: number
+): Promise<GeneratedRoute> {
+  const profile = getBRouterProfile(terrain);
+  const isTrail = terrain === 'trail';
+  const direct = await routeViaPoints([start, end], profile, isTrail);
+
+  // Pas de cible, ou trajet direct déjà au moins aussi long que demandé (on ne peut pas
+  // raccourcir en-dessous du plus court chemin réel tout en rejoignant le même point B).
+  if (!targetKm || targetKm <= direct.distKm * 1.05) {
+    return toGeneratedRoute(direct);
+  }
+
+  const bearing = bearingBetween(start, end);
+  const mid: LatLng = { lat: (start.lat + end.lat) / 2, lng: (start.lng + end.lng) / 2 };
+  const dp = targetDP ?? 0;
+
+  let best = direct;
+  let bestScore = scoreAttempt(direct, targetKm, dp, isTrail);
+  let offsetKm = Math.max((targetKm - direct.distKm) / 2, 0.3);
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const side = attempt % 2 === 0 ? 90 : -90; // alterne de côté si un côté est peu praticable
+    const via = destPoint(mid, offsetKm, bearing + side);
+    let candidate: DirectAttempt;
+    try {
+      candidate = await routeViaPoints([start, via, end], profile, isTrail);
+    } catch {
+      offsetKm *= 0.7;
+      await delay(120);
+      continue;
+    }
+
+    const score = scoreAttempt(candidate, targetKm, dp, isTrail);
+    if (score < bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+
+    const dErr = (candidate.distKm - targetKm) / targetKm;
+    if (Math.abs(dErr) < 0.1) break;
+    offsetKm = Math.max(offsetKm * (dErr < 0 ? 1.4 : 0.6), 0.2);
+    await delay(120);
+  }
+
+  return toGeneratedRoute(best);
+}
+
+function toGeneratedRoute(a: DirectAttempt): GeneratedRoute {
+  return { coords: a.coords, elevation: a.elevation, distKm: a.distKm, name: 'Itinéraire Direct', purity: a.purity };
 }
 
 /**

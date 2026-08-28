@@ -58,6 +58,17 @@ export function destPoint(o: LatLng, km: number, b: number): LatLng {
   return { lat: (la2 * 180) / Math.PI, lng: (lo2 * 180) / Math.PI };
 }
 
+/** Cap initial (degrés, 0-360) du grand cercle allant de `a` à `b` — utilisé pour placer un
+ * point de détour perpendiculairement à un trajet direct. */
+export function bearingBetween(a: LatLng, b: LatLng): number {
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const dLo = ((b.lng - a.lng) * Math.PI) / 180;
+  const y = Math.sin(dLo) * Math.cos(la2);
+  const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLo);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
 /** index.html:4200-4206 — 4 points formant une boucle approximative de longueur `km`, orientée `a` (cap), à l'échelle `s`. */
 export function loopWpts(o: LatLng, km: number, a: number, s = 1): LatLng[] {
   const sl = (km / 3) * s;

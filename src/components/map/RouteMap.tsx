@@ -17,7 +17,7 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 const EMPTY_STYLE = { version: 8 as const, sources: {}, layers: [] };
 
 export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function RouteMap(
-  { initialRegion, tileStyle = 'osm', routes = [], markers = [], onMapPress, onMarkerPress },
+  { initialRegion, tileStyle = 'osm', routes = [], markers = [], onMapPress, onMarkerPress, onUserInteraction },
   ref
 ) {
   const { tokens } = useTheme();
@@ -48,6 +48,13 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
       onPress={
         onMapPress
           ? (e) => onMapPress({ lat: e.nativeEvent.lngLat[1], lng: e.nativeEvent.lngLat[0] })
+          : undefined
+      }
+      onRegionWillChange={
+        onUserInteraction
+          ? (e) => {
+              if (e.nativeEvent.userInteraction) onUserInteraction();
+            }
           : undefined
       }
     >

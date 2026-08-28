@@ -2,9 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Keyboard,
   KeyboardAvoidingView,
-  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -28,7 +26,7 @@ import { getUserLocation } from '../../lib/location/location';
 import { geocode, PlaceSuggestion } from '../../lib/api/geocode';
 import { generateDirectRoute, generateLoopRoutes, randomStartNear } from '../../lib/routing/generateRoutes';
 import { formatBRouterError } from '../../lib/routing/brouter';
-import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useBottomSheet } from '../../hooks/useBottomSheet';
 import type { MapRegion } from '../../lib/routing/geo';
 import type { GenerateStackParamList } from '../../navigation/types';
 import { Terrain } from '../../types';
@@ -44,9 +42,6 @@ const TERRAIN_OPTIONS = [
 
 const FALLBACK_REGION: MapRegion = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
 const PEEK_HEIGHT = 96;
-/** Seuil de bascule vers l'état réduit — 40% du parcours de la poignée, sinon la vitesse du geste tranche. */
-const COLLAPSE_RATIO = 0.4;
-const FLICK_VELOCITY = 0.8;
 
 /** Port de #page-generate (panneau de config, index.html:456-750) — désormais en volet
  * rétractable au-dessus d'une carte plein écran (au lieu d'un simple formulaire scrollable). */
@@ -55,7 +50,6 @@ export function GenerateScreen({ navigation, route }: Props) {
   const { showToast } = useToast();
   const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const reducedMotion = useReducedMotion();
   const { terrain, setTerrain, distance, setDistance, elevation, setElevation, userCoords, setUserCoords, setResults } = useGenerate();
 
   const [startText, setStartText] = useState('');
@@ -64,70 +58,11 @@ export function GenerateScreen({ navigation, route }: Props) {
   const [endPlace, setEndPlace] = useState<PlaceSuggestion | null>(null);
   const [generating, setGenerating] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
-  const [collapsed, setCollapsed] = useState(false);
 
   const mapRef = useRef<RouteMapHandle>(null);
   const panelHeight = Math.round(screenHeight * 0.5);
   const peekHeight = PEEK_HEIGHT + insets.bottom;
-  const maxTranslate = Math.max(panelHeight - peekHeight, 0);
-
-  const translateY = useRef(new Animated.Value(0)).current;
-  const dragStartRef = useRef(0);
-  /**
-   * PanResponder.create() n'est appelé qu'une fois (useRef) : ses callbacks referment sur les
-   * valeurs de `collapsed`/`maxTranslate` du tout premier rendu et ne voient plus jamais leurs
-   * mises à jour — c'était la cause du volet qui « sautait » après la première ouverture/fermeture.
-   * On lit donc l'état courant via des refs tenues à jour à chaque rendu plutôt que par closure.
-   */
-  const collapsedRef = useRef(collapsed);
-  collapsedRef.current = collapsed;
-  const maxTranslateRef = useRef(maxTranslate);
-  maxTranslateRef.current = maxTranslate;
-
-  function snapTo(toCollapsed: boolean) {
-    setCollapsed(toCollapsed);
-    if (toCollapsed) Keyboard.dismiss();
-    const toValue = toCollapsed ? maxTranslateRef.current : 0;
-    if (reducedMotion) {
-      translateY.setValue(toValue);
-      return;
-    }
-    Animated.spring(translateY, {
-      toValue,
-      useNativeDriver: true,
-      bounciness: 0,
-      speed: 14,
-      overshootClamping: true,
-    }).start();
-  }
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        // Valeur réelle au moment du saisissement (et non une valeur supposée d'après l'état) —
-        // capture correctement une position interrompue en plein vol par un nouveau geste.
-        translateY.stopAnimation((value) => {
-          dragStartRef.current = value;
-        });
-      },
-      onPanResponderMove: (_e, g) => {
-        const next = Math.min(Math.max(dragStartRef.current + g.dy, 0), maxTranslateRef.current);
-        translateY.setValue(next);
-      },
-      onPanResponderRelease: (_e, g) => {
-        const isTap = Math.abs(g.dy) < 6 && Math.abs(g.dx) < 6;
-        if (isTap) {
-          snapTo(!collapsedRef.current);
-          return;
-        }
-        const current = dragStartRef.current + g.dy;
-        const shouldCollapse = current > maxTranslateRef.current * COLLAPSE_RATIO || g.vy > FLICK_VELOCITY;
-        snapTo(shouldCollapse);
-      },
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  ).current;
+  const { collapsed, translateY, panHandlers, snapTo } = useBottomSheet({ panelHeight, peekHeight });
 
   /** Port de quickGenerate (index.html:3330-3342) — préréglage venant d'Accueil. */
   useEffect(() => {
@@ -196,7 +131,7 @@ export function GenerateScreen({ navigation, route }: Props) {
         setProgressMsg("Géocodage de l'arrivée…");
         const endCoords = endPlace?.coords ?? (await geocode(endText.trim()));
         setProgressMsg('Calcul BRouter…');
-        const route_ = await generateDirectRoute(startCoords, endCoords, terrain);
+        const route_ = await generateDirectRoute(startCoords, endCoords, terrain, distance, elevation);
         setResults([route_]);
       } else {
         const { routes, usedFallback } = await generateLoopRoutes(startCoords, distance, elevation, terrain, (_step, msg) => setProgressMsg(msg));
@@ -237,7 +172,7 @@ export function GenerateScreen({ navigation, route }: Props) {
           },
         ]}
       >
-        <View {...panResponder.panHandlers} style={styles.handleZone}>
+        <View {...panHandlers} style={styles.handleZone}>
           <View style={[styles.handleBar, { backgroundColor: tokens.border3 }]} />
           {collapsed ? (
             <View style={styles.peekRow}>
