@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
@@ -43,6 +44,7 @@ export function HomeScreen({ navigation }: Props) {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={tokens.text} />}
       >
         <View style={styles.hero}>
+          <LinearGradient colors={[`${tokens.accent}33`, 'transparent']} style={styles.heroGlow} pointerEvents="none" />
           <Text style={[styles.greeting, { color: tokens.text2, fontFamily: fonts.mono }]}>{profile?.name || 'Coureur'}</Text>
           <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>Prêt pour ta{'\n'}prochaine sortie ?</Text>
           <Text style={[styles.subtitle, { color: tokens.text2 }]}>Des itinéraires uniques générés en secondes, autour de toi.</Text>
@@ -58,10 +60,10 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.statsGrid}>
-          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" />
-          <StatCard icon="bar-chart-2" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" />
-          <StatCard icon="flag" value={String(savedRoutes.length)} label="Parcours créés" />
-          <StatCard icon="heart" value={String(favCount)} label="Favoris" />
+          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.accent} />
+          <StatCard icon="bar-chart-2" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" color={tokens.secondary} />
+          <StatCard icon="flag" value={String(savedRoutes.length)} label="Parcours créés" color={tokens.sky} />
+          <StatCard icon="heart" value={String(favCount)} label="Favoris" color={tokens.energy} />
         </View>
 
         <View style={styles.section}>
@@ -132,12 +134,14 @@ export function HomeScreen({ navigation }: Props) {
   );
 }
 
-function StatCard({ icon, value, label }: { icon: FeatherName; value: string; label: string }) {
+/** Chaque carte reprend une couleur de marque différente (au lieu d'un aplat surface2 uniforme
+ * partout) — plus de variété visuelle sans sortir de la palette. */
+function StatCard({ icon, value, label, color }: { icon: FeatherName; value: string; label: string; color: string }) {
   const { tokens } = useTheme();
   return (
-    <View style={[styles.statCard, { backgroundColor: tokens.surface2 }]}>
-      <Icon name={icon} size={18} color={tokens.accent} />
-      <Text style={[styles.statValue, { color: tokens.accent, fontFamily: fonts.display }]}>{value}</Text>
+    <View style={[styles.statCard, { backgroundColor: tokens.surface2, borderColor: `${color}40` }]}>
+      <Icon name={icon} size={18} color={color} />
+      <Text style={[styles.statValue, { color, fontFamily: fonts.display }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text2 }]}>{label}</Text>
     </View>
   );
@@ -156,12 +160,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { padding: 20, gap: 24 },
   hero: { gap: 8 },
+  heroGlow: { position: 'absolute', top: -60, left: '10%', width: '80%', height: 220, borderRadius: 999 },
   greeting: { fontSize: 12, letterSpacing: 1 },
   title: { fontSize: 28, lineHeight: 32 },
   subtitle: { fontSize: 14, marginBottom: 8 },
   heroActions: { gap: 8, marginTop: 4 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { flexBasis: '47%', flexGrow: 1, borderRadius: radii.md, padding: 14, gap: 4 },
+  statCard: { flexBasis: '47%', flexGrow: 1, borderRadius: radii.md, padding: 14, gap: 4, borderWidth: 1 },
   statValue: { fontSize: 24 },
   statLabel: { fontSize: 11 },
   section: { gap: 10 },

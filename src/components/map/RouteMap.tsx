@@ -17,7 +17,10 @@ import { useReducedMotion } from '../../hooks/useReducedMotion';
 const EMPTY_STYLE = { version: 8 as const, sources: {}, layers: [] };
 
 export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function RouteMap(
-  { initialRegion, tileStyle = 'osm', routes = [], markers = [], onMapPress, onMarkerPress, onUserInteraction },
+  // Satellite par défaut — plus riche visuellement et cohérent avec le thème sombre (les tuiles
+  // OSM claires juraient sur les écrans Générer/Résultats). Le dessin manuel repasse en OSM
+  // explicitement : les libellés de rues y sont utiles pour viser ses points au tap.
+  { initialRegion, tileStyle = 'satellite', routes = [], markers = [], onMapPress, onMarkerPress, onUserInteraction },
   ref
 ) {
   const { tokens } = useTheme();

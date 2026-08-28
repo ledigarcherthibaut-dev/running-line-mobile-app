@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   KeyboardAvoidingView,
+  LayoutChangeEvent,
   Platform,
   ScrollView,
   StyleSheet,
@@ -63,6 +64,16 @@ export function GenerateScreen({ navigation, route }: Props) {
   const panelHeight = Math.round(screenHeight * 0.5);
   const peekHeight = PEEK_HEIGHT + insets.bottom;
   const { collapsed, translateY, panHandlers, snapTo } = useBottomSheet({ panelHeight, peekHeight });
+
+  // Amène le champ touché (et ses suggestions) en haut de la zone visible du volet plutôt que
+  // de laisser le clavier les recouvrir — la position Y captée par onLayout est déjà relative au
+  // contenu du ScrollView, donc directement utilisable par scrollTo().
+  const scrollRef = useRef<ScrollView>(null);
+  const startFieldY = useRef(0);
+  const endFieldY = useRef(0);
+  function scrollToField(y: number) {
+    scrollRef.current?.scrollTo({ y: Math.max(y - 12, 0), animated: true });
+  }
 
   /** Port de quickGenerate (index.html:3330-3342) — préréglage venant d'Accueil. */
   useEffect(() => {
@@ -191,7 +202,7 @@ export function GenerateScreen({ navigation, route }: Props) {
         </View>
 
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={12}>
-          <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" scrollEnabled={!collapsed}>
+          <ScrollView ref={scrollRef} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" scrollEnabled={!collapsed}>
             <ChoiceGrid options={TERRAIN_OPTIONS} value={terrain} onSelect={setTerrain} columns={4} />
 
             <SliderField
@@ -213,22 +224,28 @@ export function GenerateScreen({ navigation, route }: Props) {
               formatValue={(v) => `${v} m`}
             />
 
-            <AddressAutocompleteField
-              label="Départ"
-              value={startText}
-              onChangeText={setStartText}
-              onSelectPlace={setStartPlace}
-              placeholder="Adresse ou ville (vide = position GPS)"
-              biasCoords={userCoords}
-            />
-            <AddressAutocompleteField
-              label="Arrivée (optionnel)"
-              value={endText}
-              onChangeText={setEndText}
-              onSelectPlace={setEndPlace}
-              placeholder="Pour un itinéraire direct A→B"
-              biasCoords={startPlace?.coords ?? userCoords}
-            />
+            <View onLayout={(e: LayoutChangeEvent) => { startFieldY.current = e.nativeEvent.layout.y; }}>
+              <AddressAutocompleteField
+                label="Départ"
+                value={startText}
+                onChangeText={setStartText}
+                onSelectPlace={setStartPlace}
+                placeholder="Adresse ou ville (vide = position GPS)"
+                biasCoords={userCoords}
+                onFocus={() => scrollToField(startFieldY.current)}
+              />
+            </View>
+            <View onLayout={(e: LayoutChangeEvent) => { endFieldY.current = e.nativeEvent.layout.y; }}>
+              <AddressAutocompleteField
+                label="Arrivée (optionnel)"
+                value={endText}
+                onChangeText={setEndText}
+                onSelectPlace={setEndPlace}
+                placeholder="Pour un itinéraire direct A→B"
+                biasCoords={startPlace?.coords ?? userCoords}
+                onFocus={() => scrollToField(endFieldY.current)}
+              />
+            </View>
 
             {generating && <Text style={[styles.progress, { color: tokens.text2, fontFamily: fonts.mono }]}>{progressMsg}</Text>}
 

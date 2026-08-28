@@ -82,6 +82,7 @@ export function DrawRouteScreen({ navigation }: Props) {
       <View style={styles.mapArea}>
         <RouteMap
           initialRegion={DEFAULT_REGION}
+          tileStyle="osm"
           onMapPress={handleMapPress}
           onMarkerPress={(id) => draw.selectPoint(Number(id.replace('pt-', '')))}
           markers={draw.points.map((p, i) => ({

@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { RouteMap } from '../../components/map/RouteMap';
@@ -101,7 +102,10 @@ export function ExplorerScreen({ navigation }: Props) {
         <View style={styles.flex}>
           {trails.length === 0 && !loadingTrails ? (
             <View style={styles.empty}>
-              <Icon name="compass" size={36} color={tokens.text3} />
+              <LinearGradient colors={[`${tokens.accent}40`, 'transparent']} style={styles.emptyGlow} pointerEvents="none" />
+              <View style={[styles.emptyIconBadge, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
+                <Icon name="compass" size={30} color={tokens.accent} />
+              </View>
               <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Sentiers autour de toi</Text>
               <Text style={[styles.emptySub, { color: tokens.text2 }]}>Localise-toi pour découvrir les sentiers OSM dans un rayon de 25km.</Text>
               <Button title="Chercher autour de moi" icon="map-pin" onPress={loadTrails} loading={loadingTrails} />
@@ -209,7 +213,10 @@ export function ExplorerScreen({ navigation }: Props) {
             ListEmptyComponent={
               !loadingCommunity ? (
                 <View style={styles.empty}>
-                  <Icon name="globe" size={36} color={tokens.text3} />
+                  <LinearGradient colors={[`${tokens.secondary}40`, 'transparent']} style={styles.emptyGlow} pointerEvents="none" />
+                  <View style={[styles.emptyIconBadge, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
+                    <Icon name="globe" size={30} color={tokens.secondary} />
+                  </View>
                   <Text style={[styles.emptySub, { color: tokens.text2 }]}>
                     {community.length === 0 ? 'Aucun parcours partagé. Sois le premier !' : 'Aucun parcours dans cette catégorie.'}
                   </Text>
@@ -285,8 +292,10 @@ const styles = StyleSheet.create({
   filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 11 },
   error: { fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
-  list: { padding: 16, paddingTop: 0, gap: 10 },
-  empty: { alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
+  list: { flexGrow: 1, padding: 16, paddingTop: 0, gap: 10 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
+  emptyGlow: { position: 'absolute', top: -40, width: 280, height: 280, borderRadius: 140, alignSelf: 'center' },
+  emptyIconBadge: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   emptyTitle: { fontSize: 16 },
   emptySub: { fontSize: 13, textAlign: 'center' },
   trailCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, padding: 12, borderWidth: 1 },
