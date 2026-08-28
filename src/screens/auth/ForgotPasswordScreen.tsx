@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../../components/ui/Icon';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { resetPassword } from '../../lib/supabase/auth';
@@ -63,7 +63,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
             {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
             {sent && (
               <View style={styles.successRow}>
-                <Feather name="mail" size={14} color={tokens.success} />
+                <Icon name="mail" size={14} color={tokens.success} />
                 <Text style={[styles.success, { color: tokens.success }]}>Email envoyé !</Text>
               </View>
             )}

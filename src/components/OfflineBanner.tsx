@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './ui/Icon';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
@@ -14,7 +14,7 @@ export function OfflineBanner() {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: tokens.text }]} pointerEvents="none">
       <View style={styles.row}>
-        <Feather name="wifi-off" size={12} color={tokens.bg} />
+        <Icon name="wifi-off" size={12} color={tokens.bg} />
         <Text style={[styles.text, { color: tokens.bg }]}>Hors ligne — dernières données affichées</Text>
       </View>
     </SafeAreaView>

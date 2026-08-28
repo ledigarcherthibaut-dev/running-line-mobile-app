@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInputProps, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './Icon';
 import { TextField } from './TextField';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
@@ -97,7 +97,7 @@ export function AddressAutocompleteField({
                 style={[styles.item, i > 0 && { borderTopWidth: 1, borderTopColor: tokens.border }]}
                 accessibilityRole="button"
               >
-                <Feather name="map-pin" size={13} color={tokens.text3} />
+                <Icon name="map-pin" size={13} color={tokens.text3} />
                 <Text style={[styles.itemText, { color: tokens.text }]} numberOfLines={2}>
                   {s.label}
                 </Text>

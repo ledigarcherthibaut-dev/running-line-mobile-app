@@ -87,9 +87,9 @@ export function DrawRouteScreen({ navigation }: Props) {
           markers={draw.points.map((p, i) => ({
             id: `pt-${i}`,
             coord: p,
-            color: i === draw.selectedIndex ? tokens.accent : '#BEA3FE',
+            color: i === draw.selectedIndex ? tokens.accent : tokens.secondary,
           }))}
-          routes={draw.allCoords.length ? [{ id: 'draw', coords: draw.allCoords, color: '#BEA3FE' }] : []}
+          routes={draw.allCoords.length ? [{ id: 'draw', coords: draw.allCoords, color: tokens.secondary }] : []}
         />
       </View>
       <View style={styles.panel}>

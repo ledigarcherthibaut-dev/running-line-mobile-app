@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './ui/Icon';
 import { TextField } from './ui/TextField';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
@@ -35,7 +35,7 @@ export function RateRouteModal({
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: tokens.surface }]}>
           <View style={styles.titleRow}>
-            <Feather name="star" size={18} color={tokens.text} />
+            <Icon name="star" size={18} color={tokens.text} />
             <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>Noter ce parcours</Text>
           </View>
           <Text style={[styles.routeName, { color: tokens.text }]}>{routeName}</Text>
@@ -53,7 +53,7 @@ export function RateRouteModal({
                 accessibilityLabel={`${i} étoile${i > 1 ? 's' : ''}`}
                 accessibilityState={{ selected: i <= score }}
               >
-                <Feather name="star" size={28} color={i <= score ? tokens.fav : tokens.border3} />
+                <Icon name="star" size={28} color={i <= score ? tokens.fav : tokens.border3} />
               </Pressable>
             ))}
           </View>

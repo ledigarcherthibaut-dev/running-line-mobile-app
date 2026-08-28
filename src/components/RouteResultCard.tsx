@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './ui/Icon';
 import { ElevationChart } from './charts/ElevationChart';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
@@ -48,21 +48,21 @@ export function RouteResultCard({
       <View style={styles.badges}>
         {recommended && (
           <View style={[styles.badgeRow, { backgroundColor: tokens.accentDim }]}>
-            <Feather name="award" size={10} color={tokens.text} />
+            <Icon name="award" size={10} color={tokens.text} />
             <Text style={[styles.badgeText, { color: tokens.text }]}>Recommandé</Text>
           </View>
         )}
         <Text style={[styles.badge, { color: tokens.text2, backgroundColor: tokens.surface2 }]}>{TERRAIN_LABEL[terrain]}</Text>
         {!!route.purity && (
           <View style={[styles.badgeRow, { backgroundColor: tokens.surface2 }]}>
-            <Feather name="navigation" size={10} color={purityColor[route.purity.cssClass]} />
+            <Icon name="navigation" size={10} color={purityColor[route.purity.cssClass]} />
             <Text style={[styles.badgeText, { color: purityColor[route.purity.cssClass] }]}>{route.purity.label}</Text>
           </View>
         )}
       </View>
       {duration && (
         <View style={styles.durationRow}>
-          <Feather name="clock" size={11} color={tokens.text3} />
+          <Icon name="clock" size={11} color={tokens.text3} />
           <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
         </View>
       )}

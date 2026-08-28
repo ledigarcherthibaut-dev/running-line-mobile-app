@@ -1,5 +1,5 @@
 import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './ui/Icon';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
@@ -30,7 +30,7 @@ export function GarminExportModal({
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: tokens.surface }]}>
           <View style={styles.titleRow}>
-            <Feather name="watch" size={18} color={tokens.sky} />
+            <Icon name="watch" size={18} color={tokens.sky} />
             <Text style={[styles.title, { color: tokens.sky, fontFamily: fonts.display }]}>Importer dans Garmin</Text>
           </View>
           <Text style={[styles.body, { color: tokens.text2 }]}>
@@ -45,7 +45,7 @@ export function GarminExportModal({
             onPress={() => Linking.openURL(GARMIN_CONNECT_WEB_URL)}
           >
             <Text style={[styles.openBtnText, { color: tokens.sky, fontFamily: fonts.display }]}>Ouvrir Garmin Connect (web)</Text>
-            <Feather name="arrow-right" size={16} color={tokens.sky} />
+            <Icon name="arrow-right" size={16} color={tokens.sky} />
           </Pressable>
 
           <View style={styles.steps}>

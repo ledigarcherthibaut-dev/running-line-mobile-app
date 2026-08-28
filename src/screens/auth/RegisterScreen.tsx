@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { signUp } from '../../lib/supabase/auth';
@@ -12,7 +12,7 @@ import { passwordStrength } from '../../lib/passwordStrength';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: FeatherName }[] = [
   { value: 'dark', label: 'Sombre', icon: 'moon' },
@@ -94,8 +94,11 @@ export function RegisterScreen({ navigation }: Props) {
                     { backgroundColor: tokens.surface2, borderColor: 'transparent' },
                     themeChoice === opt.value && { borderColor: tokens.onAccent, backgroundColor: tokens.accent },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Thème ${opt.label}`}
+                  accessibilityState={{ selected: themeChoice === opt.value }}
                 >
-                  <Feather name={opt.icon} size={20} color={themeChoice === opt.value ? tokens.onAccent : tokens.text} />
+                  <Icon name={opt.icon} size={20} color={themeChoice === opt.value ? tokens.onAccent : tokens.text} />
                   <Text style={[styles.themeLabel, { color: themeChoice === opt.value ? tokens.onAccent : tokens.text }]}>{opt.label}</Text>
                 </Pressable>
               ))}

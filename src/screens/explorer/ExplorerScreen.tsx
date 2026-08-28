@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
@@ -19,7 +19,7 @@ type Props = NativeStackScreenProps<ExplorerStackParamList, 'ExplorerScreen'>;
 type Tab = 'trails' | 'community';
 type TrailFilter = 'all' | TrailType;
 type CommunityFilter = 'all' | Terrain;
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 const TRAIL_BADGE: Record<TrailType, FeatherName> = { foot: 'compass', bicycle: 'wind', mtb: 'trending-up' };
 const TRAIL_FILTER_LABEL: Record<TrailType, string> = { foot: 'Pédestre', bicycle: 'Vélo', mtb: 'VTT' };
@@ -101,7 +101,7 @@ export function ExplorerScreen({ navigation }: Props) {
         <View style={styles.flex}>
           {trails.length === 0 && !loadingTrails ? (
             <View style={styles.empty}>
-              <Feather name="compass" size={36} color={tokens.text3} />
+              <Icon name="compass" size={36} color={tokens.text3} />
               <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Sentiers autour de toi</Text>
               <Text style={[styles.emptySub, { color: tokens.text2 }]}>Localise-toi pour découvrir les sentiers OSM dans un rayon de 25km.</Text>
               <Button title="Chercher autour de moi" icon="map-pin" onPress={loadTrails} loading={loadingTrails} />
@@ -131,8 +131,11 @@ export function ExplorerScreen({ navigation }: Props) {
                       { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
                       trailFilter === f && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
                     ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filtrer : ${f === 'all' ? 'Tous' : TRAIL_FILTER_LABEL[f]}`}
+                    accessibilityState={{ selected: trailFilter === f }}
                   >
-                    {f !== 'all' && <Feather name={TRAIL_BADGE[f]} size={12} color={trailFilter === f ? tokens.text : tokens.text2} />}
+                    {f !== 'all' && <Icon name={TRAIL_BADGE[f]} size={12} color={trailFilter === f ? tokens.text : tokens.text2} />}
                     <Text style={[styles.filterLabel, { color: tokens.text2, fontFamily: fonts.mono }, trailFilter === f && { color: tokens.text, fontWeight: '700' }]}>
                       {f === 'all' ? 'Tous' : TRAIL_FILTER_LABEL[f]}
                     </Text>
@@ -150,13 +153,15 @@ export function ExplorerScreen({ navigation }: Props) {
                   <Pressable
                     style={[styles.trailCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                     onPress={() => navigation.navigate('TrailDetail', { trailId: item.id, trailName: item.name })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Sentier ${item.name}, ${item.distance || '?'} km`}
                   >
-                    <Feather name={TRAIL_BADGE[item.type]} size={20} color={tokens.text2} />
+                    <Icon name={TRAIL_BADGE[item.type]} size={20} color={tokens.text2} />
                     <View style={styles.trailInfo}>
                       <Text style={[styles.trailName, { color: tokens.text, fontFamily: fonts.display }]}>{item.name}</Text>
                       <Text style={[styles.trailMeta, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.distance || '?'} km · {item.network || item.type}</Text>
                     </View>
-                    <Feather name="chevron-right" size={18} color={tokens.text3} />
+                    <Icon name="chevron-right" size={18} color={tokens.text3} />
                   </Pressable>
                 )}
               />
@@ -176,8 +181,11 @@ export function ExplorerScreen({ navigation }: Props) {
                     { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
                     communityFilter === f.value && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filtrer : ${f.label}`}
+                  accessibilityState={{ selected: communityFilter === f.value }}
                 >
-                  {f.icon && <Feather name={f.icon} size={12} color={communityFilter === f.value ? tokens.text : tokens.text2} />}
+                  {f.icon && <Icon name={f.icon} size={12} color={communityFilter === f.value ? tokens.text : tokens.text2} />}
                   <Text
                     style={[
                       styles.filterLabel,
@@ -201,7 +209,7 @@ export function ExplorerScreen({ navigation }: Props) {
             ListEmptyComponent={
               !loadingCommunity ? (
                 <View style={styles.empty}>
-                  <Feather name="globe" size={36} color={tokens.text3} />
+                  <Icon name="globe" size={36} color={tokens.text3} />
                   <Text style={[styles.emptySub, { color: tokens.text2 }]}>
                     {community.length === 0 ? 'Aucun parcours partagé. Sois le premier !' : 'Aucun parcours dans cette catégorie.'}
                   </Text>
@@ -212,6 +220,8 @@ export function ExplorerScreen({ navigation }: Props) {
               <Pressable
                 style={[styles.communityCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Parcours ${item.name} par ${item.userName}, ${item.distKm.toFixed(1)} km`}
               >
                 {item.coords?.length > 1 && (
                   <View style={styles.communityPreview}>
@@ -234,7 +244,7 @@ export function ExplorerScreen({ navigation }: Props) {
                     <Text style={[styles.communityStatMuted, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
                   </View>
                   <View style={styles.communityRatingRow}>
-                    <Feather name="star" size={11} color={tokens.fav} />
+                    <Icon name="star" size={11} color={tokens.fav} />
                     <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
                       {item.ratingCount > 0 ? `${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
                     </Text>
@@ -255,8 +265,11 @@ function TabButton({ icon, label, active, onPress }: { icon: FeatherName; label:
     <Pressable
       onPress={onPress}
       style={[styles.tabBtn, { backgroundColor: tokens.surface2 }, active && { backgroundColor: tokens.accent }]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
     >
-      <Feather name={icon} size={14} color={active ? tokens.onAccent : tokens.text2} />
+      <Icon name={icon} size={14} color={active ? tokens.onAccent : tokens.text2} />
       <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.onAccent, fontWeight: '700' }]}>{label}</Text>
     </Pressable>
   );

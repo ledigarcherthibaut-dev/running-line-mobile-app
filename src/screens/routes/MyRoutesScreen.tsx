@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { SavedRouteCard } from '../../components/SavedRouteCard';
 import { RateRouteModal } from '../../components/RateRouteModal';
 import { GarminExportModal } from '../../components/GarminExportModal';
@@ -17,7 +17,7 @@ import type { MyRoutesStackParamList } from '../../navigation/types';
 import { SavedRoute } from '../../types';
 
 type Props = NativeStackScreenProps<MyRoutesStackParamList, 'MyRoutesScreen'>;
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 type Filter = 'all' | 'fav' | 'trail' | 'road' | 'mixed';
 const FILTERS: { value: Filter; label: string; icon?: FeatherName }[] = [
@@ -73,8 +73,11 @@ export function MyRoutesScreen({ navigation }: Props) {
               { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
               filter === f.value && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Filtrer : ${f.label}`}
+            accessibilityState={{ selected: filter === f.value }}
           >
-            {f.icon && <Feather name={f.icon} size={12} color={filter === f.value ? tokens.text : tokens.text2} />}
+            {f.icon && <Icon name={f.icon} size={12} color={filter === f.value ? tokens.text : tokens.text2} />}
             <Text style={[styles.filterLabel, { color: tokens.text2, fontFamily: fonts.mono }, filter === f.value && { color: tokens.text, fontWeight: '700' }]}>
               {f.label}
             </Text>
@@ -89,14 +92,14 @@ export function MyRoutesScreen({ navigation }: Props) {
           accessibilityRole="button"
           accessibilityLabel={`Trier par ${SORT_LABEL[sortMode]}`}
         >
-          <Feather name={SORT_ICON[sortMode]} size={12} color={tokens.text2} />
+          <Icon name={SORT_ICON[sortMode]} size={12} color={tokens.text2} />
           <Text style={[styles.sortLabel, { color: tokens.text2, fontFamily: fonts.mono }]}>Trier : {SORT_LABEL[sortMode]}</Text>
         </Pressable>
       )}
 
       {filtered.length === 0 ? (
         <View style={styles.empty}>
-          <Feather name="flag" size={40} color={tokens.text3} />
+          <Icon name="flag" size={40} color={tokens.text3} />
           <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Aucun parcours ici</Text>
           <Text style={[styles.emptySub, { color: tokens.text2 }]}>Génère un parcours et sauvegarde-le pour le retrouver ici.</Text>
         </View>

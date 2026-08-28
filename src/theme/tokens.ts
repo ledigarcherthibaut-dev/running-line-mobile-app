@@ -1,7 +1,7 @@
-// Light palette ported from the web app's CSS custom properties
-// (reference/running-line-web/running_line/public/index.html:47-62) — the cream/lime look
-// is the source app's only theme. The dark palette below is a genuine inverted theme built
-// for the mobile app (bg/surface/text/border inverted, brand accent colors kept identical).
+// Palette "Cold Luxury x Forest" — gris chrome/argent désaturés (cold luxury) mêlés à un vert
+// forêt profond et un accent ambre/bronze (forest). Remplace l'identité lime héritée de l'app
+// web d'origine (voir historique git pour l'ancienne palette). Aucune couleur pure #000/#FFF —
+// toujours un near-black/off-white teinté, plus premium et plus doux à l'œil.
 
 export interface ThemeTokens {
   bg: string;
@@ -41,41 +41,41 @@ export interface ThemeTokens {
 
 /** Couleurs de marque partagées entre les deux thèmes (identiques en clair et en sombre). */
 const brand = {
-  accent: '#F0FB6B',
-  secondary: '#BEA3FE',
-  tertiary: '#FAAEE4',
-  sky: '#60B8F5',
-  energy: '#FF9B50',
-  danger: '#E53E3E',
-  fav: '#F59E0B',
-  success: '#22C55E',
-  onAccent: '#101215',
+  accent: '#C9973F', // ambre/bronze — CTA principal
+  secondary: '#3F7256', // vert forêt profond
+  tertiary: '#8B8FA3', // gris chrome/ardoise — "smoke" cold luxury
+  sky: '#5B87A6', // bleu acier désaturé
+  energy: '#BA6A3D', // terracotta/rouille
+  danger: '#B23B2E', // rouge brique mat
+  fav: '#D4A24C', // or chaud (étoiles/favoris)
+  success: '#3F7256', // même vert forêt que secondary — cohérence de famille
+  onAccent: '#17130E', // near-black chaud, contraste garanti sur l'accent ambre
 } as const;
 
 export const lightTokens: ThemeTokens = {
-  bg: '#F5F0EF',
-  surface: '#FFFFFF',
-  surface2: '#F5F0EF',
-  surface3: '#EDE8E7',
-  surface4: '#E5E0DF',
-  border: 'rgba(0,0,0,.08)',
-  border2: 'rgba(0,0,0,.13)',
-  border3: 'rgba(0,0,0,.20)',
-  text: '#000000',
-  text2: 'rgba(0,0,0,.6)',
-  text3: 'rgba(0,0,0,.45)',
+  bg: '#EDEAE2',
+  surface: '#FBFAF7',
+  surface2: '#EDEAE2',
+  surface3: '#E3DFD3',
+  surface4: '#D7D2C3',
+  border: 'rgba(28,27,24,.08)',
+  border2: 'rgba(28,27,24,.13)',
+  border3: 'rgba(28,27,24,.20)',
+  text: '#1C1B18',
+  text2: 'rgba(28,27,24,.62)',
+  text3: 'rgba(28,27,24,.45)',
   accent: brand.accent,
-  accentGlow: 'rgba(240,251,107,.30)',
-  accentDim: 'rgba(240,251,107,.22)',
+  accentGlow: 'rgba(201,151,63,.30)',
+  accentDim: 'rgba(201,151,63,.22)',
   onAccent: brand.onAccent,
   secondary: brand.secondary,
-  secondaryDim: 'rgba(190,163,254,.22)',
+  secondaryDim: 'rgba(63,114,86,.20)',
   tertiary: brand.tertiary,
-  tertiaryDim: 'rgba(250,174,228,.22)',
+  tertiaryDim: 'rgba(139,143,163,.20)',
   sky: brand.sky,
-  skyDim: 'rgba(96,184,245,.15)',
+  skyDim: 'rgba(91,135,166,.15)',
   energy: brand.energy,
-  energyDim: 'rgba(255,155,80,.12)',
+  energyDim: 'rgba(186,106,61,.14)',
   danger: brand.danger,
   fav: brand.fav,
   success: brand.success,
@@ -88,29 +88,29 @@ export const lightTokens: ThemeTokens = {
 
 /** Thème sombre réel — surfaces/texte/bordures inversés, couleurs de marque conservées. */
 export const darkTokens: ThemeTokens = {
-  bg: '#101215',
-  surface: '#191C21',
-  surface2: '#20242A',
-  surface3: '#282D34',
-  surface4: '#31363F',
+  bg: '#14171A',
+  surface: '#1C2023',
+  surface2: '#242A2E',
+  surface3: '#2C3338',
+  surface4: '#363E44',
   border: 'rgba(255,255,255,.09)',
   border2: 'rgba(255,255,255,.14)',
   border3: 'rgba(255,255,255,.22)',
-  text: '#FFFFFF',
+  text: '#F1F3F4',
   text2: 'rgba(255,255,255,.66)',
   text3: 'rgba(255,255,255,.48)',
   accent: brand.accent,
-  accentGlow: 'rgba(240,251,107,.30)',
-  accentDim: 'rgba(240,251,107,.18)',
+  accentGlow: 'rgba(201,151,63,.30)',
+  accentDim: 'rgba(201,151,63,.18)',
   onAccent: brand.onAccent,
   secondary: brand.secondary,
-  secondaryDim: 'rgba(190,163,254,.22)',
+  secondaryDim: 'rgba(63,114,86,.24)',
   tertiary: brand.tertiary,
-  tertiaryDim: 'rgba(250,174,228,.22)',
+  tertiaryDim: 'rgba(139,143,163,.22)',
   sky: brand.sky,
-  skyDim: 'rgba(96,184,245,.18)',
+  skyDim: 'rgba(91,135,166,.18)',
   energy: brand.energy,
-  energyDim: 'rgba(255,155,80,.18)',
+  energyDim: 'rgba(186,106,61,.18)',
   danger: brand.danger,
   fav: brand.fav,
   success: brand.success,
@@ -133,7 +133,9 @@ export const radii = {
 export const fonts = {
   display: 'Anton_400Regular',
   mono: 'RobotoMono_400Regular',
-  body: 'Roboto_400Regular',
+  // Manrope remplace Roboto (police système Android par défaut, l'équivalent mobile d'"Inter
+  // par défaut" que les outils de design déconseillent) — plus distinctif, toujours très lisible.
+  body: 'Manrope_400Regular',
 };
 
 /** index.html:2991-2992 — couleurs assignées aux tracés générés/dessinés. */

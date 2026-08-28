@@ -1,10 +1,10 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from './Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 
 type Variant = 'primary' | 'secondary' | 'text';
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 export function Button({
   title,
@@ -48,7 +48,7 @@ export function Button({
         <ActivityIndicator color={textColor} />
       ) : (
         <>
-          {icon && iconPosition === 'left' && <Feather name={icon} size={16} color={textColor} style={styles.iconLeft} />}
+          {icon && iconPosition === 'left' && <Icon name={icon} size={16} color={textColor} style={styles.iconLeft} />}
           <Text
             style={[
               styles.label,
@@ -58,7 +58,7 @@ export function Button({
           >
             {title}
           </Text>
-          {icon && iconPosition === 'right' && <Feather name={icon} size={16} color={textColor} style={styles.iconRight} />}
+          {icon && iconPosition === 'right' && <Icon name={icon} size={16} color={textColor} style={styles.iconRight} />}
         </>
       )}
     </Pressable>

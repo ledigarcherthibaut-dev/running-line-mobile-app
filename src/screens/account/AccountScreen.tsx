@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { ChoiceGrid } from '../../components/ui/ChoiceGrid';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
@@ -19,7 +19,7 @@ import { passwordStrength } from '../../lib/passwordStrength';
 import { exportUserData } from '../../lib/exportUserData';
 import { Level, Terrain, UserProfile } from '../../types';
 
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 const LEVEL_OPTIONS = [
   { value: 'beginner' as Level, icon: 'sunrise' as const, label: 'Débutant' },
@@ -185,7 +185,7 @@ export function AccountScreen() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={[styles.avatar, { backgroundColor: tokens.accent }]}>
+        <View style={[styles.avatar, { backgroundColor: tokens.accent, borderColor: tokens.secondary }]}>
           <Text style={[styles.avatarText, { color: tokens.onAccent, fontFamily: fonts.display }]}>{initial}</Text>
         </View>
         <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{profile.name || '—'}</Text>
@@ -249,7 +249,7 @@ export function AccountScreen() {
 
         <View style={[styles.dangerZone, { borderColor: 'rgba(229,62,62,0.3)' }]}>
           <View style={styles.dangerLabelRow}>
-            <Feather name="alert-triangle" size={14} color={tokens.danger} />
+            <Icon name="alert-triangle" size={14} color={tokens.danger} />
             <Text style={[styles.dangerLabel, { color: tokens.danger }]}>Zone dangereuse</Text>
           </View>
           <Button title="Se déconnecter" icon="log-out" variant="secondary" onPress={confirmLogout} style={{ borderColor: 'rgba(229,62,62,0.3)' }} />
@@ -284,7 +284,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { padding: 24, gap: 4 },
-  avatar: { alignSelf: 'center', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  avatar: { alignSelf: 'center', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2 },
   avatarText: { fontSize: 24 },
   name: { fontSize: 20, textAlign: 'center' },
   email: { fontSize: 12, textAlign: 'center', marginBottom: 20 },

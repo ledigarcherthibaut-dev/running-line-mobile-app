@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../ui/Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts } from '../../theme/tokens';
 import { RouteMapHandle, RouteMapProps } from './RouteMap.types';
@@ -20,7 +20,7 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
 
   return (
     <View style={[styles.container, { backgroundColor: tokens.surface3 }]}>
-      <Feather name="map" size={32} color={tokens.text3} />
+      <Icon name="map" size={32} color={tokens.text3} />
       <Text style={[styles.text, { color: tokens.text3 }]}>Carte non disponible sur le web{'\n'}(aperçu Android via EAS)</Text>
       {routes.length > 0 && <Text style={[styles.meta, { color: tokens.text3 }]}>{routes.length} tracé(s)</Text>}
       {markers.length > 0 && <Text style={[styles.meta, { color: tokens.text3 }]}>{markers.length} marqueur(s)</Text>}

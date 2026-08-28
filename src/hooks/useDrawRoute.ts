@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Coord, GeneratedRoute, LatLng, Terrain } from '../types';
 import { fetchBRouterMultiPoint, formatBRouterError, getBRouterProfile, featureToCoords } from '../lib/routing/brouter';
 import { analyzeElevation, calcDist, simplifyToWaypoints } from '../lib/routing/geo';
+import { lightTokens } from '../theme/tokens';
 
 interface Segment {
   coords: Coord[];
@@ -166,7 +167,9 @@ export function useDrawRoute(terrain: Terrain) {
       distKm: calcDist(allCoords),
       elevation: analyzeElevation(allCoords),
       name: name || 'Mon parcours',
-      color: '#BEA3FE',
+      // Couleurs de marque identiques clair/sombre (theme/tokens.ts) — ce hook n'est pas un
+      // composant, pas de useTheme() possible ici.
+      color: lightTokens.secondary,
     };
   }
 

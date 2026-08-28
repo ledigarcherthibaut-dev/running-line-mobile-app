@@ -14,12 +14,14 @@ const config: ExpoConfig = {
     url: 'https://u.expo.dev/0602e782-d98a-44e0-88ee-edc35282a7d4',
   },
   ios: {
-    supportsTablet: true,
+    // Aucun écran n'est pensé pour un layout tablette dans cette passe — mieux vaut l'annoncer
+    // honnêtement que de laisser une UI téléphone simplement étirée sur iPad.
+    supportsTablet: false,
   },
   android: {
     package: 'com.runningline.app',
     adaptiveIcon: {
-      backgroundColor: '#F0FB6B',
+      backgroundColor: '#C9973F',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -47,15 +49,14 @@ const config: ExpoConfig = {
     [
       'expo-notifications',
       {
-        color: '#F0FB6B',
+        color: '#C9973F',
       },
     ],
     [
       'expo-splash-screen',
       {
-        // Fond du thème sombre (défaut de l'app depuis la refonte) — l'ancienne valeur crème
-        // était celle du thème clair et flashait avant chaque apparition de l'UI sombre.
-        backgroundColor: '#101215',
+        // Fond du thème sombre (défaut de l'app depuis la refonte, palette Cold Luxury x Forest).
+        backgroundColor: '#14171A',
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',

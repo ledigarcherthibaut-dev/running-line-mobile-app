@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from './ui/Icon';
 import { TextField } from './ui/TextField';
 import { Button } from './ui/Button';
 import { useTheme } from '../theme/ThemeContext';
@@ -36,14 +36,14 @@ export function SaveRouteModal({
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: tokens.surface }]}>
           <View style={styles.titleRow}>
-            <Feather name="save" size={18} color={tokens.text} />
+            <Icon name="save" size={18} color={tokens.text} />
             <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>Enregistrer le parcours</Text>
           </View>
           <TextField label="Nom" value={name} onChangeText={setName} placeholder="Ex: Tour de la forêt" />
 
           <Pressable style={styles.checkRow} onPress={() => setIsFav((v) => !v)}>
             <Switch value={isFav} onValueChange={setIsFav} />
-            <Feather name="star" size={14} color={tokens.text2} />
+            <Icon name="star" size={14} color={tokens.text2} />
             <Text style={[styles.checkLabel, { color: tokens.text2 }]}>Marquer en favori</Text>
           </Pressable>
 
@@ -54,7 +54,7 @@ export function SaveRouteModal({
             <Switch value={isPublic} onValueChange={setIsPublic} />
             <View style={styles.publicText}>
               <View style={styles.checkRow}>
-                <Feather name="globe" size={14} color={tokens.text} />
+                <Icon name="globe" size={14} color={tokens.text} />
                 <Text style={[styles.publicTitle, { color: tokens.text }]}>Partager à la communauté</Text>
               </View>
               <Text style={[styles.publicSub, { color: tokens.text2 }]}>Visible dans l'explorateur pour tous</Text>

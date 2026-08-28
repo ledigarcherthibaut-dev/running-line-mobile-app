@@ -1,5 +1,5 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from './ui/Icon';
 import { useTheme } from '../theme/ThemeContext';
 import { radii, fonts } from '../theme/tokens';
 import { hapticSelect } from '../lib/haptics';
@@ -39,7 +39,7 @@ export function SavedRouteCard({
         <RouteSatellitePreview coords={route.coords} color={tokens.accent} />
         {route.isFav && (
           <View style={styles.favBadge}>
-            <Feather name="star" size={10} color={tokens.fav} />
+            <Icon name="star" size={10} color={tokens.fav} />
           </View>
         )}
       </View>
@@ -84,7 +84,7 @@ function ActionBtn({
   onPress,
   label,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: IconName;
   active?: boolean;
   danger?: boolean;
   onPress: () => void;
@@ -107,7 +107,7 @@ function ActionBtn({
       accessibilityLabel={label}
       accessibilityState={active !== undefined ? { selected: active } : undefined}
     >
-      <Feather name={icon} size={18} color={danger ? tokens.danger : active ? tokens.text : tokens.text2} />
+      <Icon name={icon} size={18} color={danger ? tokens.danger : active ? tokens.text : tokens.text2} />
     </Pressable>
   );
 }

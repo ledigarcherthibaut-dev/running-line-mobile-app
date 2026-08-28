@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Platform, Pressable, StyleSheet } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../components/ui/Icon';
 import { useTheme } from '../theme/ThemeContext';
 import { radii } from '../theme/tokens';
 import { ExplorerStack } from './ExplorerStack';
@@ -12,7 +12,7 @@ import type { AppTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 const TAB_ICONS: Record<keyof AppTabParamList, FeatherName> = {
   Home: 'home',
   Generate: 'zap',
@@ -37,7 +37,7 @@ function GenerateTabButton({ onPress, accessibilityState }: BottomTabBarButtonPr
           focused && styles.elevatedButtonFocused,
         ]}
       >
-        <Feather name="zap" size={26} color={tokens.onAccent} />
+        <Icon name="zap" size={26} color={tokens.onAccent} />
       </Pressable>
     </Pressable>
   );
@@ -53,7 +53,7 @@ export function AppTabs() {
         tabBarInactiveTintColor: tokens.text3,
         tabBarStyle: { backgroundColor: tokens.surface, borderTopColor: tokens.border2, height: Platform.OS === 'ios' ? 88 : 68 },
         tabBarIcon: ({ color, size }) => (
-          <Feather name={TAB_ICONS[route.name as keyof AppTabParamList]} size={size} color={color} />
+          <Icon name={TAB_ICONS[route.name as keyof AppTabParamList]} size={size} color={color} />
         ),
       })}
     >

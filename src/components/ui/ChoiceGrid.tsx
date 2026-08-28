@@ -1,12 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from './Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { hapticSelect } from '../../lib/haptics';
 
 export interface ChoiceOption<T extends string> {
   value: T;
-  icon: keyof typeof Feather.glyphMap;
+  icon: IconName;
   label: string;
   sub?: string;
 }
@@ -43,10 +43,10 @@ export function ChoiceGrid<T extends string>({
           >
             {selected && (
               <View style={[styles.check, { backgroundColor: tokens.accent }]}>
-                <Feather name="check" size={10} color={tokens.onAccent} />
+                <Icon name="check" size={10} color={tokens.onAccent} />
               </View>
             )}
-            <Feather name={opt.icon} size={22} color={tokens.text} />
+            <Icon name={opt.icon} size={22} color={tokens.text} />
             <Text style={[styles.label, { color: tokens.text }]}>{opt.label}</Text>
             {opt.sub ? <Text style={[styles.sub, { color: tokens.text3 }]}>{opt.sub}</Text> : null}
           </Pressable>

@@ -3,13 +3,14 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../../components/ui/Icon';
 import { RouteMap } from '../../components/map/RouteMap';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { RateRouteModal } from '../../components/RateRouteModal';
 import { GarminExportModal } from '../../components/GarminExportModal';
+import { RouteDetailSkeleton } from '../../components/ui/Skeleton';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { useAuth } from '../../state/AuthContext';
@@ -126,11 +127,19 @@ export function RouteDetailScreen() {
     ]);
   }
 
-  if (loading || !route) {
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.flex} edges={['bottom']}>
+        <RouteDetailSkeleton />
+      </SafeAreaView>
+    );
+  }
+
+  if (!route) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
         <View style={styles.center}>
-          <Text style={{ color: tokens.text2 }}>{loading ? 'Chargement…' : 'Parcours introuvable.'}</Text>
+          <Text style={{ color: tokens.text2 }}>Parcours introuvable.</Text>
         </View>
       </SafeAreaView>
     );
@@ -159,14 +168,14 @@ export function RouteDetailScreen() {
             <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{route.name}</Text>
             {owned && (
               <Pressable onPress={startRename} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renommer ce parcours">
-                <Feather name="edit-2" size={16} color={tokens.text3} />
+                <Icon name="edit-2" size={16} color={tokens.text3} />
               </Pressable>
             )}
           </View>
         )}
         {!!duration && (
           <View style={styles.durationRow}>
-            <Feather name="clock" size={11} color={tokens.text3} />
+            <Icon name="clock" size={11} color={tokens.text3} />
             <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
           </View>
         )}

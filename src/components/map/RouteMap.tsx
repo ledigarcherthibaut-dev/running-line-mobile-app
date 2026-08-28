@@ -4,6 +4,7 @@ import { Camera, CameraRef, GeoJSONSource, Layer, Map as MapLibreMap, MapRef, Ma
 import { TILE_URLS } from './tileStyles';
 import { RouteMapHandle, RouteMapProps } from './RouteMap.types';
 import { useTheme } from '../../theme/ThemeContext';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 /**
  * Carte native — MapLibre (open-source, aucune clé/compte requis) plutôt que
@@ -22,6 +23,7 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
   const { tokens } = useTheme();
   const mapRef = useRef<MapRef>(null);
   const cameraRef = useRef<CameraRef>(null);
+  const reducedMotion = useReducedMotion();
 
   useImperativeHandle(ref, () => ({
     fitToCoordinates(coords) {
@@ -30,11 +32,11 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
       const lats = coords.map((c) => c.lat);
       cameraRef.current?.fitBounds(
         [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
-        { padding: { top: 60, right: 60, bottom: 60, left: 60 }, duration: 500 }
+        { padding: { top: 60, right: 60, bottom: 60, left: 60 }, duration: reducedMotion ? 0 : 500 }
       );
     },
     animateToRegion(region) {
-      cameraRef.current?.flyTo({ center: [region.longitude, region.latitude], zoom: 13, duration: 500 });
+      cameraRef.current?.flyTo({ center: [region.longitude, region.latitude], zoom: 13, duration: reducedMotion ? 0 : 500 });
     },
   }));
 

@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../../components/ui/Icon';
 import { ChoiceGrid } from '../../components/ui/ChoiceGrid';
 import { SliderField } from '../../components/ui/SliderField';
 import { AddressAutocompleteField } from '../../components/ui/AddressAutocompleteField';
@@ -28,6 +28,7 @@ import { getUserLocation } from '../../lib/location/location';
 import { geocode, PlaceSuggestion } from '../../lib/api/geocode';
 import { generateDirectRoute, generateLoopRoutes, randomStartNear } from '../../lib/routing/generateRoutes';
 import { formatBRouterError } from '../../lib/routing/brouter';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import type { MapRegion } from '../../lib/routing/geo';
 import type { GenerateStackParamList } from '../../navigation/types';
 import { Terrain } from '../../types';
@@ -54,6 +55,7 @@ export function GenerateScreen({ navigation, route }: Props) {
   const { showToast } = useToast();
   const { height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
   const { terrain, setTerrain, distance, setDistance, elevation, setElevation, userCoords, setUserCoords, setResults } = useGenerate();
 
   const [startText, setStartText] = useState('');
@@ -85,8 +87,13 @@ export function GenerateScreen({ navigation, route }: Props) {
   function snapTo(toCollapsed: boolean) {
     setCollapsed(toCollapsed);
     if (toCollapsed) Keyboard.dismiss();
+    const toValue = toCollapsed ? maxTranslateRef.current : 0;
+    if (reducedMotion) {
+      translateY.setValue(toValue);
+      return;
+    }
     Animated.spring(translateY, {
-      toValue: toCollapsed ? maxTranslateRef.current : 0,
+      toValue,
       useNativeDriver: true,
       bounciness: 0,
       speed: 14,
@@ -234,16 +241,16 @@ export function GenerateScreen({ navigation, route }: Props) {
           <View style={[styles.handleBar, { backgroundColor: tokens.border3 }]} />
           {collapsed ? (
             <View style={styles.peekRow}>
-              <Feather name="sliders" size={13} color={tokens.text2} />
+              <Icon name="sliders" size={13} color={tokens.text2} />
               <Text style={[styles.peekText, { color: tokens.text, fontFamily: fonts.mono }]}>
                 {distance.toFixed(1)} km · {terrainLabel}
               </Text>
-              <Feather name="chevron-up" size={16} color={tokens.text3} />
+              <Icon name="chevron-up" size={16} color={tokens.text3} />
             </View>
           ) : (
             <View style={styles.peekRow}>
               <Text style={[styles.panelTitle, { color: tokens.text3, fontFamily: fonts.mono }]}>OPTIONS DE GÉNÉRATION</Text>
-              <Feather name="chevron-down" size={16} color={tokens.text3} />
+              <Icon name="chevron-down" size={16} color={tokens.text3} />
             </View>
           )}
         </View>

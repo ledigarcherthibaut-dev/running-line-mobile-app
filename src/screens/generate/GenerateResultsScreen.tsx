@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../../components/ui/Icon';
 import { RouteMap } from '../../components/map/RouteMap';
 import { RouteMapHandle } from '../../components/map/RouteMap.types';
 import { RouteResultCard } from '../../components/RouteResultCard';
@@ -111,7 +111,7 @@ export function GenerateResultsScreen({}: Props) {
             >
               <View style={styles.compareHeader}>
                 <View style={[styles.compareDot, { backgroundColor: r.color || tokens.secondary }]} />
-                {results.length > 1 && i === recommendedIdx && <Feather name="award" size={11} color={tokens.text} />}
+                {results.length > 1 && i === recommendedIdx && <Icon name="award" size={11} color={tokens.text} />}
               </View>
               <Text style={[styles.compareVal, { color: tokens.text, fontFamily: fonts.mono }]}>{r.distKm.toFixed(1)} km</Text>
               <Text style={[styles.compareSub, { color: tokens.text3, fontFamily: fonts.mono }]}>D+{r.elevation.totalAscent}m</Text>

@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
 import { useAuth } from '../../state/AuthContext';
@@ -12,7 +12,7 @@ import { fonts, radii } from '../../theme/tokens';
 import type { AppTabParamList, HomeStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeScreen'>;
-type FeatherName = keyof typeof Feather.glyphMap;
+type FeatherName = IconName;
 
 const QUICK_PRESETS: { km: number; terrain: 'mixed' | 'trail'; icon: FeatherName; label: string; sub: string }[] = [
   { km: 5, terrain: 'mixed', icon: 'sunrise', label: '5 km', sub: 'Récup' },
@@ -72,8 +72,10 @@ export function HomeScreen({ navigation }: Props) {
                 key={p.label}
                 style={[styles.presetChip, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => goGenerate(p.km, p.terrain)}
+                accessibilityRole="button"
+                accessibilityLabel={`Générer ${p.label}, ${p.sub}`}
               >
-                <Feather name={p.icon} size={22} color={tokens.text} style={styles.presetIcon} />
+                <Icon name={p.icon} size={22} color={tokens.text} style={styles.presetIcon} />
                 <Text style={[styles.presetLabel, { color: tokens.text, fontFamily: fonts.display }]}>{p.label}</Text>
                 <Text style={[styles.presetSub, { color: tokens.text3, fontFamily: fonts.mono }]}>{p.sub}</Text>
               </Pressable>
@@ -101,6 +103,8 @@ export function HomeScreen({ navigation }: Props) {
                 key={r.id}
                 style={[styles.recentCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => navigation.navigate('RouteDetail', { routeId: r.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Parcours ${r.name}, ${r.distKm.toFixed(1)} km`}
               >
                 <View style={styles.recentThumb}>
                   <RouteSatellitePreview coords={r.coords} color={tokens.accent} />
@@ -117,7 +121,7 @@ export function HomeScreen({ navigation }: Props) {
             ))
           ) : (
             <View style={[styles.emptyState, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-              <Feather name="flag" size={26} color={tokens.text3} />
+              <Icon name="flag" size={26} color={tokens.text3} />
               <Text style={[styles.emptyStateTitle, { color: tokens.text, fontFamily: fonts.display }]}>Aucun parcours pour l'instant</Text>
               <Text style={[styles.emptyStateSub, { color: tokens.text2 }]}>Génère ton premier parcours ci-dessus pour le retrouver ici.</Text>
             </View>
@@ -132,7 +136,7 @@ function StatCard({ icon, value, label }: { icon: FeatherName; value: string; la
   const { tokens } = useTheme();
   return (
     <View style={[styles.statCard, { backgroundColor: tokens.surface2 }]}>
-      <Feather name={icon} size={18} color={tokens.accent} />
+      <Icon name={icon} size={18} color={tokens.accent} />
       <Text style={[styles.statValue, { color: tokens.accent, fontFamily: fonts.display }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text2 }]}>{label}</Text>
     </View>
@@ -142,7 +146,7 @@ function StatCard({ icon, value, label }: { icon: FeatherName; value: string; la
 function MetaItem({ icon, text, color }: { icon: FeatherName; text: string; color: string }) {
   return (
     <View style={styles.metaItem}>
-      <Feather name={icon} size={11} color={color} />
+      <Icon name={icon} size={11} color={color} />
       <Text style={[styles.recentMeta, { color, fontFamily: fonts.mono }]}>{text}</Text>
     </View>
   );

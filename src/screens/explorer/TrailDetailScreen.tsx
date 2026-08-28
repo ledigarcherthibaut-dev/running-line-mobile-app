@@ -3,11 +3,12 @@ import { useRoute } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '../../components/ui/Icon';
 import { RouteMap } from '../../components/map/RouteMap';
 import { ElevationChart } from '../../components/charts/ElevationChart';
 import { Button } from '../../components/ui/Button';
 import { GarminExportModal } from '../../components/GarminExportModal';
+import { RouteDetailSkeleton } from '../../components/ui/Skeleton';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
 import { useAuth } from '../../state/AuthContext';
@@ -68,11 +69,19 @@ export function TrailDetailScreen() {
     }
   }
 
-  if (loading || !route) {
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.flex} edges={['bottom']}>
+        <RouteDetailSkeleton statsCount={3} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!route) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
         <View style={styles.center}>
-          <Text style={{ color: error ? tokens.danger : tokens.text2 }}>{error || 'Chargement du sentier…'}</Text>
+          <Text style={{ color: error ? tokens.danger : tokens.text2 }}>{error || 'Sentier introuvable.'}</Text>
         </View>
       </SafeAreaView>
     );
@@ -89,7 +98,7 @@ export function TrailDetailScreen() {
         <Text style={[styles.name, { color: tokens.text, fontFamily: fonts.display }]}>{route.name}</Text>
         {!!duration && (
           <View style={styles.durationRow}>
-            <Feather name="clock" size={11} color={tokens.text3} />
+            <Icon name="clock" size={11} color={tokens.text3} />
             <Text style={[styles.durationText, { color: tokens.text3, fontFamily: fonts.mono }]}>{duration} à ton allure</Text>
           </View>
         )}
