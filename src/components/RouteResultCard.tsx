@@ -89,7 +89,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   const { tokens } = useTheme();
   return (
     <View style={[styles.stat, { backgroundColor: tokens.surface2 }]}>
-      <Text style={[styles.statVal, { color: tokens.highlight }]}>{value}</Text>
+      <Text style={[styles.statVal, { color: tokens.accent }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text3 }]}>{label}</Text>
     </View>
   );

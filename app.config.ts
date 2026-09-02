@@ -21,7 +21,7 @@ const config: ExpoConfig = {
   android: {
     package: 'com.runningline.app',
     adaptiveIcon: {
-      backgroundColor: '#C9973F',
+      backgroundColor: '#F0FB6B',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -49,14 +49,14 @@ const config: ExpoConfig = {
     [
       'expo-notifications',
       {
-        color: '#C9973F',
+        color: '#F0FB6B',
       },
     ],
     [
       'expo-splash-screen',
       {
-        // Fond du thème sombre (défaut de l'app depuis la refonte, palette Cold Luxury x Forest).
-        backgroundColor: '#14171A',
+        // Fond du thème clair (défaut de l'app), même valeur que lightTokens.bg.
+        backgroundColor: '#EDEAE2',
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',

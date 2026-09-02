@@ -1,7 +1,7 @@
-// Palette "Cold Luxury x Forest" — gris chrome/argent désaturés (cold luxury) mêlés à un vert
-// forêt profond et un accent ambre/bronze (forest). Remplace l'identité lime héritée de l'app
-// web d'origine (voir historique git pour l'ancienne palette). Aucune couleur pure #000/#FFF —
-// toujours un near-black/off-white teinté, plus premium et plus doux à l'œil.
+// Palette "Cold Luxury x Forest" — vert forêt profond et gris chrome/ardoise en toile de fond,
+// avec le lime historique de la marque (#F0FB6B) comme accent principal, tel que dans l'app web
+// d'origine. Aucune couleur pure #000/#FFF — toujours un near-black/off-white teinté, plus doux
+// à l'œil que du noir/blanc pur.
 
 export interface ThemeTokens {
   bg: string;
@@ -25,11 +25,6 @@ export interface ThemeTokens {
   secondaryDim: string;
   tertiary: string;
   tertiaryDim: string;
-  /** Lime historique de la marque — plus utilisé comme accent principal, mais réintroduit pour
-   * les détails (valeurs de stats, lignes de graphique, badges) : un clin d'œil à l'identité
-   * d'origine sans revenir à du "lime partout". */
-  highlight: string;
-  highlightDim: string;
   sky: string;
   skyDim: string;
   energy: string;
@@ -46,7 +41,7 @@ export interface ThemeTokens {
 
 /** Couleurs de marque partagées entre les deux thèmes (identiques en clair et en sombre). */
 const brand = {
-  accent: '#C9973F', // ambre/bronze — CTA principal
+  accent: '#F0FB6B', // lime historique de la marque — CTA principal
   secondary: '#3F7256', // vert forêt profond
   tertiary: '#8B8FA3', // gris chrome/ardoise — "smoke" cold luxury
   sky: '#5B87A6', // bleu acier désaturé
@@ -54,8 +49,7 @@ const brand = {
   danger: '#B23B2E', // rouge brique mat
   fav: '#D4A24C', // or chaud (étoiles/favoris)
   success: '#3F7256', // même vert forêt que secondary — cohérence de famille
-  onAccent: '#17130E', // near-black chaud, contraste garanti sur l'accent ambre et le lime
-  highlight: '#F0FB6B', // lime historique — détails uniquement (voir commentaire ThemeTokens)
+  onAccent: '#171B12', // near-black, contraste garanti sur l'accent lime clair
 } as const;
 
 export const lightTokens: ThemeTokens = {
@@ -71,15 +65,13 @@ export const lightTokens: ThemeTokens = {
   text2: 'rgba(28,27,24,.62)',
   text3: 'rgba(28,27,24,.45)',
   accent: brand.accent,
-  accentGlow: 'rgba(201,151,63,.30)',
-  accentDim: 'rgba(201,151,63,.22)',
+  accentGlow: 'rgba(240,251,107,.30)',
+  accentDim: 'rgba(240,251,107,.22)',
   onAccent: brand.onAccent,
   secondary: brand.secondary,
   secondaryDim: 'rgba(63,114,86,.20)',
   tertiary: brand.tertiary,
   tertiaryDim: 'rgba(139,143,163,.20)',
-  highlight: brand.highlight,
-  highlightDim: 'rgba(240,251,107,.20)',
   sky: brand.sky,
   skyDim: 'rgba(91,135,166,.15)',
   energy: brand.energy,
@@ -108,15 +100,13 @@ export const darkTokens: ThemeTokens = {
   text2: 'rgba(255,255,255,.66)',
   text3: 'rgba(255,255,255,.48)',
   accent: brand.accent,
-  accentGlow: 'rgba(201,151,63,.30)',
-  accentDim: 'rgba(201,151,63,.18)',
+  accentGlow: 'rgba(240,251,107,.30)',
+  accentDim: 'rgba(240,251,107,.18)',
   onAccent: brand.onAccent,
   secondary: brand.secondary,
   secondaryDim: 'rgba(63,114,86,.24)',
   tertiary: brand.tertiary,
   tertiaryDim: 'rgba(139,143,163,.22)',
-  highlight: brand.highlight,
-  highlightDim: 'rgba(240,251,107,.18)',
   sky: brand.sky,
   skyDim: 'rgba(91,135,166,.18)',
   energy: brand.energy,

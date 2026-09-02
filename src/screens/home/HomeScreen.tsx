@@ -68,7 +68,7 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.statsGrid}>
-          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.highlight} />
+          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.accent} />
           <StatCard icon="bar-chart-2" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" color={tokens.secondary} />
           <StatCard icon="flag" value={String(savedRoutes.length)} label="Parcours créés" color={tokens.sky} />
           <StatCard icon="heart" value={String(favCount)} label="Favoris" color={tokens.energy} />

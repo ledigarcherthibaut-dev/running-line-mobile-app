@@ -49,9 +49,9 @@ export function SavedRouteCard({
           {route.name}
         </Text>
         <View style={styles.statsRow}>
-          <Text style={[styles.statVal, { color: tokens.highlight, fontFamily: fonts.mono }]}>{route.distKm.toFixed(1)} km</Text>
+          <Text style={[styles.statVal, { color: tokens.accent, fontFamily: fonts.mono }]}>{route.distKm.toFixed(1)} km</Text>
           <View style={[styles.statSep, { backgroundColor: tokens.border2 }]} />
-          <Text style={[styles.statVal, { color: tokens.highlight, fontFamily: fonts.mono }]}>D+{route.elevation.totalAscent}m</Text>
+          <Text style={[styles.statVal, { color: tokens.accent, fontFamily: fonts.mono }]}>D+{route.elevation.totalAscent}m</Text>
           <Text style={[styles.meta, { color: tokens.text3 }]}> · {route.terrain || 'mixte'}</Text>
         </View>
 

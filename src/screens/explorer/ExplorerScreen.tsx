@@ -246,8 +246,8 @@ export function ExplorerScreen({ navigation }: Props) {
                     </View>
                   </View>
                   <View style={styles.communityMeta}>
-                    <Text style={[styles.communityStat, { color: tokens.highlight, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
-                    <Text style={[styles.communityStat, { color: tokens.highlight, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
                     <Text style={[styles.communityStatMuted, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
                   </View>
                   <View style={styles.communityRatingRow}>

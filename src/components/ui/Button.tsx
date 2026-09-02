@@ -7,9 +7,9 @@ import { fonts, radii } from '../../theme/tokens';
 type Variant = 'primary' | 'secondary' | 'text';
 type FeatherName = IconName;
 
-/** Dégradé diagonal clair→sombre sur l'ambre — donne du relief au bouton principal plutôt
+/** Dégradé diagonal clair→plus soutenu sur le lime — donne du relief au bouton principal plutôt
  * qu'un aplat plat (déjà utilisé partout ailleurs). */
-const PRIMARY_GRADIENT = ['#E3B569', '#C9973F', '#A67A2E'] as const;
+const PRIMARY_GRADIENT = ['#F6FF9E', '#F0FB6B', '#D9E85B'] as const;
 
 export function Button({
   title,

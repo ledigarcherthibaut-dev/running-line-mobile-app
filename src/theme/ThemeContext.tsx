@@ -35,8 +35,9 @@ function resolveScheme(mode: ThemeMode, systemScheme: ReturnType<typeof useColor
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  // Sombre par défaut (refonte UI) tant que l'utilisateur n'a pas choisi explicitement — le clair reste disponible via le sélecteur du Compte.
-  const [mode, setModeState] = useState<ThemeMode>('dark');
+  // Clair par défaut tant que l'utilisateur n'a pas choisi explicitement (à l'onboarding ou
+  // plus tard) — le sombre reste disponible via l'onboarding ou le sélecteur du Compte.
+  const [mode, setModeState] = useState<ThemeMode>('light');
   const [localPreferenceLoaded, setLocalPreferenceLoaded] = useState(false);
   const [hasLocalPreference, setHasLocalPreference] = useState(false);
 
