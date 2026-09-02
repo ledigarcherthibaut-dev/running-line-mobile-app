@@ -109,7 +109,7 @@ export function TrailDetailScreen() {
         </View>
         <ElevationChart elevations={route.elevation.elevations} color={tokens.sky} height={50} />
         <View style={styles.actions}>
-          <Button title="Envoyer vers Garmin" icon="watch" variant="secondary" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Télécharger le GPX" icon="download" variant="secondary" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
           <Button title="Sauvegarder" icon="save" onPress={handleSave} style={styles.actionBtn} />
         </View>
       </ScrollView>

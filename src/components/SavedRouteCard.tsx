@@ -69,7 +69,7 @@ export function SavedRouteCard({
             onPress={onTogglePublic}
             label={route.isPublic ? 'Rendre privé' : 'Partager à la communauté'}
           />
-          <ActionBtn icon="watch" onPress={onExportGpx} label="Envoyer vers Garmin" />
+          <ActionBtn icon="download" onPress={onExportGpx} label="Télécharger le GPX" />
           <ActionBtn icon="trash-2" danger onPress={confirmDelete} label="Supprimer ce parcours" />
         </View>
       </View>

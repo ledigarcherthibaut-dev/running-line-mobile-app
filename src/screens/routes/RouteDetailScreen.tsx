@@ -191,7 +191,7 @@ export function RouteDetailScreen() {
 
         <View style={styles.actions}>
           <Button title="Noter" icon="star" variant="secondary" onPress={() => setRateVisible(true)} style={styles.actionBtn} />
-          <Button title="Envoyer vers Garmin" icon="watch" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
+          <Button title="Télécharger le GPX" icon="download" onPress={() => exportToGarmin(route).catch((e) => showToast(e.message, true))} style={styles.actionBtn} />
         </View>
 
         {owned ? (

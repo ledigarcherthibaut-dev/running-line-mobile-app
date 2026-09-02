@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 import { Coord } from '../../types';
 import { TILE_URLS } from '../map/tileStyles';
 import { latToTileYFrac, lonToTileXFrac, pickTileGrid } from '../../lib/map/tileMath';
+
+const MAX_TILE_RETRIES = 2;
 
 /**
  * Aperçu du tracé sur fond satellite (mosaïque de tuiles Esri World_Imagery + ligne du parcours
@@ -12,11 +15,14 @@ import { latToTileYFrac, lonToTileXFrac, pickTileGrid } from '../../lib/map/tile
 export function RouteSatellitePreview({ coords, color }: { coords: Coord[]; color: string }) {
   if (!coords || coords.length < 2) return null;
 
-  const sample = coords.filter((_, i) => i % Math.max(1, Math.floor(coords.length / 60)) === 0);
-  const lats = sample.map((c) => c[1]);
-  const lngs = sample.map((c) => c[0]);
+  // Bornes calculées sur le tracé COMPLET, pas un échantillon — un point extrême écarté par
+  // l'échantillonnage pouvait sortir de la grille de tuiles choisie et se retrouver hors-cadre.
+  const lats = coords.map((c) => c[1]);
+  const lngs = coords.map((c) => c[0]);
   const bounds = { minLat: Math.min(...lats), maxLat: Math.max(...lats), minLng: Math.min(...lngs), maxLng: Math.max(...lngs) };
   const grid = pickTileGrid(bounds, 2);
+
+  const sample = coords.filter((_, i) => i % Math.max(1, Math.floor(coords.length / 60)) === 0);
 
   const toPixel = (lng: number, lat: number) => ({
     x: ((lonToTileXFrac(lng, grid.zoom) - grid.minTileX) / grid.cols) * 100,
@@ -27,8 +33,8 @@ export function RouteSatellitePreview({ coords, color }: { coords: Coord[]; colo
     const p = toPixel(c[0], c[1]);
     return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
   });
-  const start = toPixel(sample[0][0], sample[0][1]);
-  const end = toPixel(sample[sample.length - 1][0], sample[sample.length - 1][1]);
+  const start = toPixel(coords[0][0], coords[0][1]);
+  const end = toPixel(coords[coords.length - 1][0], coords[coords.length - 1][1]);
 
   const tiles: { x: number; y: number; uri: string }[] = [];
   for (let row = 0; row < grid.rows; row++) {
@@ -44,9 +50,9 @@ export function RouteSatellitePreview({ coords, color }: { coords: Coord[]; colo
   return (
     <View style={styles.container}>
       {tiles.map((t) => (
-        <Image
-          key={`${t.x}-${t.y}`}
-          source={{ uri: t.uri }}
+        <Tile
+          key={`${grid.zoom}-${t.x}-${t.y}`}
+          uri={t.uri}
           style={{
             position: 'absolute',
             left: `${(t.x / grid.cols) * 100}%`,
@@ -54,7 +60,6 @@ export function RouteSatellitePreview({ coords, color }: { coords: Coord[]; colo
             width: `${(1 / grid.cols) * 100}%`,
             height: `${(1 / grid.rows) * 100}%`,
           }}
-          resizeMode="cover"
         />
       ))}
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={StyleSheet.absoluteFill}>
@@ -63,6 +68,30 @@ export function RouteSatellitePreview({ coords, color }: { coords: Coord[]; colo
         <Circle cx={end.x} cy={end.y} r={2.2} fill="white" stroke={color} strokeWidth={1} />
       </Svg>
     </View>
+  );
+}
+
+/**
+ * Les tuiles Esri (serveur gratuit, non garanti) échouent parfois ponctuellement — sans retry, une
+ * tuile en erreur reste un trou vide sous le tracé en permanence. On retente quelques fois avant
+ * d'abandonner sur cette tuile précise.
+ */
+function Tile({ uri, style }: { uri: string; style: object }) {
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+
+  return (
+    <Image
+      key={attempt}
+      source={{ uri }}
+      style={style}
+      resizeMode="cover"
+      onError={() => {
+        if (attempt < MAX_TILE_RETRIES) setAttempt((a) => a + 1);
+        else setFailed(true);
+      }}
+    />
   );
 }
 

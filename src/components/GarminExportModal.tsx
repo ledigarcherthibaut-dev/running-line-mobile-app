@@ -30,14 +30,18 @@ export function GarminExportModal({
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { backgroundColor: tokens.surface }]}>
           <View style={styles.titleRow}>
-            <Icon name="watch" size={18} color={tokens.sky} />
-            <Text style={[styles.title, { color: tokens.sky, fontFamily: fonts.display }]}>Importer dans Garmin</Text>
+            <Icon name="download" size={18} color={tokens.sky} />
+            <Text style={[styles.title, { color: tokens.sky, fontFamily: fonts.display }]}>Téléchargement terminé</Text>
           </View>
           <Text style={[styles.body, { color: tokens.text2 }]}>
-            <Text style={{ color: tokens.text, fontWeight: '700' }}>{filename}</Text> a été enregistré. Garmin Connect
-            n'apparaît jamais dans la fenêtre de partage qui vient de s'ouvrir (ce n'est pas un bug — l'appli ne
-            reçoit pas de fichiers par ce biais) : choisis-y « Fichiers »/« Drive »/« Téléchargements » pour garder
-            le GPX quelque part, puis importe-le avec l'une des deux méthodes ci-dessous.
+            <Text style={{ color: tokens.text, fontWeight: '700' }}>{filename}</Text> a été enregistré. Choisis « Fichiers »/« Drive »/« Téléchargements »
+            dans la fenêtre qui vient de s'ouvrir pour garder le GPX quelque part sur ton appareil.
+          </Text>
+
+          <Text style={[styles.altLabel, { color: tokens.text3, fontFamily: fonts.mono }]}>POUR L'UTILISER SUR UNE MONTRE GARMIN</Text>
+          <Text style={[styles.body, { color: tokens.text2 }]}>
+            Garmin Connect n'apparaît jamais dans la fenêtre de partage (ce n'est pas un bug — l'appli ne reçoit pas
+            de fichiers par ce biais) : importe le GPX enregistré avec l'une des deux méthodes ci-dessous.
           </Text>
 
           <Pressable

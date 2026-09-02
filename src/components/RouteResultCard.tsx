@@ -80,7 +80,7 @@ export function RouteResultCard({
         <Button title="Centrer" icon="crosshair" variant="secondary" onPress={onCenter} style={styles.actionBtn} />
         <Button title="Sauver" icon="save" onPress={onSave} style={styles.actionBtn} />
       </View>
-      <Button title="Envoyer vers Garmin" icon="watch" variant="secondary" onPress={onExportGpx} />
+      <Button title="Télécharger le GPX" icon="download" variant="secondary" onPress={onExportGpx} />
     </Pressable>
   );
 }
