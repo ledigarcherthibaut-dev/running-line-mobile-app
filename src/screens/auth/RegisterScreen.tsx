@@ -2,19 +2,22 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { signUp } from '../../lib/supabase/auth';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii, ThemeMode } from '../../theme/tokens';
+import { passwordStrength } from '../../lib/passwordStrength';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+type FeatherName = IconName;
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
-  { value: 'dark', label: 'Sombre', icon: '🌙' },
-  { value: 'auto', label: 'Auto', icon: '⚡' },
-  { value: 'light', label: 'Clair', icon: '☀️' },
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: FeatherName }[] = [
+  { value: 'dark', label: 'Sombre', icon: 'moon' },
+  { value: 'auto', label: 'Auto', icon: 'smartphone' },
+  { value: 'light', label: 'Clair', icon: 'sun' },
 ];
 
 /** Port de doRegister (index.html:3140-3152) + choix du thème initial (regThemeChoice). */
@@ -23,9 +26,12 @@ export function RegisterScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [themeChoice, setThemeChoice] = useState<ThemeMode>('auto');
+  // Aligné sur le défaut réel de ThemeContext (clair) — sinon valider sans toucher au
+  // sélecteur appliquait silencieusement 'auto' à la place du clair par défaut de l'app.
+  const [themeChoice, setThemeChoice] = useState<ThemeMode>('light');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const strength = passwordStrength(password);
 
   async function handleRegister() {
     setError('');
@@ -73,6 +79,9 @@ export function RegisterScreen({ navigation }: Props) {
               secureTextEntry
               autoComplete="password-new"
             />
+            {strength && (
+              <Text style={[styles.strength, { color: tokens[strength.color] }]}>Robustesse : {strength.label}</Text>
+            )}
 
             <Text style={[styles.sectionLabel, { color: tokens.text3, fontFamily: fonts.mono }]}>THÈME</Text>
             <View style={styles.themeRow}>
@@ -83,11 +92,14 @@ export function RegisterScreen({ navigation }: Props) {
                   style={[
                     styles.themeCard,
                     { backgroundColor: tokens.surface2, borderColor: 'transparent' },
-                    themeChoice === opt.value && { borderColor: tokens.text, backgroundColor: tokens.accent },
+                    themeChoice === opt.value && { borderColor: tokens.onAccent, backgroundColor: tokens.accent },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Thème ${opt.label}`}
+                  accessibilityState={{ selected: themeChoice === opt.value }}
                 >
-                  <Text style={styles.themeIcon}>{opt.icon}</Text>
-                  <Text style={[styles.themeLabel, { color: tokens.text }]}>{opt.label}</Text>
+                  <Icon name={opt.icon} size={20} color={themeChoice === opt.value ? tokens.onAccent : tokens.text} />
+                  <Text style={[styles.themeLabel, { color: themeChoice === opt.value ? tokens.onAccent : tokens.text }]}>{opt.label}</Text>
                 </Pressable>
               ))}
             </View>
@@ -114,10 +126,10 @@ const styles = StyleSheet.create({
   card: { borderRadius: 28, padding: 24, gap: 14 },
   cardTitle: { fontSize: 22 },
   cardSubtitle: { fontSize: 14, marginBottom: 6 },
+  strength: { fontSize: 11, marginTop: -4 },
   sectionLabel: { fontSize: 11, letterSpacing: 0.5, marginTop: 4 },
   themeRow: { flexDirection: 'row', gap: 10 },
   themeCard: { flex: 1, alignItems: 'center', gap: 6, paddingVertical: 14, borderRadius: radii.md, borderWidth: 1.5 },
-  themeIcon: { fontSize: 20 },
   themeLabel: { fontSize: 13 },
   error: { fontSize: 13 },
   submit: { marginTop: 8 },

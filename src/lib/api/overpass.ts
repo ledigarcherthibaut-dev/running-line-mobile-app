@@ -12,6 +12,7 @@ export interface OSMTrail {
   type: TrailType;
   distance?: string;
   network?: string;
+  center?: LatLng;
 }
 
 async function overpassFetch(query: string): Promise<any> {
@@ -38,13 +39,20 @@ export async function fetchNearbyTrails(center: LatLng): Promise<OSMTrail[]> {
   relation["route"="bicycle"]["network"~"^(rcn|ncn|icn|lcn)$"](around:25000,${center.lat},${center.lng});
   relation["route"="mtb"](around:25000,${center.lat},${center.lng});
 );
-out tags 30;`;
+out tags center 30;`;
   const data = await overpassFetch(q);
   const elements = (data.elements || []).filter((e: any) => e.tags?.name).slice(0, 25);
   return elements.map((t: any): OSMTrail => {
     const route = t.tags.route;
     const type: TrailType = route === 'mtb' ? 'mtb' : route === 'bicycle' ? 'bicycle' : 'foot';
-    return { id: t.id, name: t.tags.name, type, distance: t.tags.distance || t.tags.length, network: t.tags.network };
+    return {
+      id: t.id,
+      name: t.tags.name,
+      type,
+      distance: t.tags.distance || t.tags.length,
+      network: t.tags.network,
+      center: t.center ? { lat: t.center.lat, lng: t.center.lon } : undefined,
+    };
   });
 }
 

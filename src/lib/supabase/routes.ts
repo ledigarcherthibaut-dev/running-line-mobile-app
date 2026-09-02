@@ -59,6 +59,10 @@ export function saveRoute(
   return supabase.from('routes').insert([full]);
 }
 
+export function renameRoute(userId: string, routeId: string, name: string) {
+  return supabase.from('routes').update({ name }).eq('id', routeId).eq('user_id', userId);
+}
+
 /** Port de toggleFav (index.html:3462-3468). */
 export function toggleFavorite(userId: string, routeId: string, isFav: boolean) {
   return supabase.from('routes').update({ is_fav: isFav }).eq('id', routeId).eq('user_id', userId);
@@ -80,6 +84,7 @@ export interface CommunityRoute {
   distKm: number;
   elevation: RouteElevation;
   terrain: Terrain;
+  coords: Coord[];
   userName: string;
   savedAt: string;
   avgRating: number;
@@ -113,6 +118,7 @@ export async function fetchCommunityRoutes(): Promise<CommunityRoute[]> {
       distKm: r.dist_km,
       elevation: r.elevation,
       terrain: r.terrain,
+      coords: r.coords,
       userName: r.user_name || 'Anonyme',
       savedAt: r.saved_at,
       avgRating: avg,

@@ -14,7 +14,9 @@ const config: ExpoConfig = {
     url: 'https://u.expo.dev/0602e782-d98a-44e0-88ee-edc35282a7d4',
   },
   ios: {
-    supportsTablet: true,
+    // Aucun écran n'est pensé pour un layout tablette dans cette passe — mieux vaut l'annoncer
+    // honnêtement que de laisser une UI téléphone simplement étirée sur iPad.
+    supportsTablet: false,
   },
   android: {
     package: 'com.runningline.app',
@@ -53,12 +55,16 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#F5F0EF',
+        // Fond du thème clair (défaut de l'app), même valeur que lightTokens.bg.
+        backgroundColor: '#EDEAE2',
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',
       },
     ],
+    // Contourne un timeout récurrent de jitpack.io lors de la résolution Gradle d'une plage de
+    // version bouncycastle (dépendance transitive d'expo-updates) — voir le plugin pour le détail.
+    './plugins/withBouncyCastleFix',
   ],
 };
 

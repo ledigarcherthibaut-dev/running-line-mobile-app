@@ -1,10 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon, IconName } from './Icon';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, radii } from '../../theme/tokens';
+import { hapticSelect } from '../../lib/haptics';
 
 export interface ChoiceOption<T extends string> {
   value: T;
-  icon: string;
+  icon: IconName;
   label: string;
   sub?: string;
 }
@@ -29,14 +31,22 @@ export function ChoiceGrid<T extends string>({
         return (
           <Pressable
             key={opt.value}
-            onPress={() => onSelect(opt.value)}
+            onPress={() => {
+              hapticSelect();
+              onSelect(opt.value);
+            }}
             style={[
               styles.card,
               { width: `${100 / columns - 2}%`, backgroundColor: tokens.surface2, borderColor: 'transparent' },
-              selected && { borderColor: tokens.text, backgroundColor: tokens.accent },
+              selected && { borderColor: tokens.accent, backgroundColor: tokens.accentDim },
             ]}
           >
-            <Text style={styles.icon}>{opt.icon}</Text>
+            {selected && (
+              <View style={[styles.check, { backgroundColor: tokens.accent }]}>
+                <Icon name="check" size={10} color={tokens.onAccent} />
+              </View>
+            )}
+            <Icon name={opt.icon} size={22} color={tokens.text} />
             <Text style={[styles.label, { color: tokens.text }]}>{opt.label}</Text>
             {opt.sub ? <Text style={[styles.sub, { color: tokens.text3 }]}>{opt.sub}</Text> : null}
           </Pressable>
@@ -55,7 +65,16 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1.5,
   },
-  icon: { fontSize: 22 },
+  check: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   label: { fontSize: 13, fontFamily: fonts.body, textAlign: 'center' },
   sub: { fontSize: 10, fontFamily: fonts.mono },
 });

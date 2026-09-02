@@ -1,32 +1,54 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
+import { RouteMap } from '../../components/map/RouteMap';
+import { RouteMapHandle } from '../../components/map/RouteMap.types';
+import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
 import { useTheme } from '../../theme/ThemeContext';
-import { fonts, radii } from '../../theme/tokens';
+import { fonts, lightTokens, radii } from '../../theme/tokens';
 import { getUserLocation, LocationError } from '../../lib/location/location';
 import { fetchNearbyTrails, OSMTrail, TrailType } from '../../lib/api/overpass';
 import { fetchCommunityRoutes, CommunityRoute } from '../../lib/supabase/routes';
 import type { ExplorerStackParamList } from '../../navigation/types';
+import { LatLng, Terrain } from '../../types';
 
 type Props = NativeStackScreenProps<ExplorerStackParamList, 'ExplorerScreen'>;
 type Tab = 'trails' | 'community';
 type TrailFilter = 'all' | TrailType;
+type CommunityFilter = 'all' | Terrain;
+type FeatherName = IconName;
 
-const TRAIL_BADGE: Record<TrailType, string> = { foot: '🥾', bicycle: '🚴', mtb: '⛰️' };
+const TRAIL_BADGE: Record<TrailType, FeatherName> = { foot: 'compass', bicycle: 'wind', mtb: 'trending-up' };
+const TRAIL_FILTER_LABEL: Record<TrailType, string> = { foot: 'Pédestre', bicycle: 'Vélo', mtb: 'VTT' };
+const DEFAULT_REGION = { latitude: 46.5, longitude: 2.5, latitudeDelta: 6, longitudeDelta: 6 };
+/** Couleurs de marque, identiques en clair/sombre (cf. theme/tokens.ts) — utilisables hors composant. */
+const MARKER_COLOR: Record<TrailType, string> = { foot: lightTokens.sky, bicycle: lightTokens.energy, mtb: lightTokens.secondary };
+
+const COMMUNITY_FILTERS: { value: CommunityFilter; label: string; icon?: FeatherName }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'trail', label: 'Trail', icon: 'trending-up' },
+  { value: 'road', label: 'Route', icon: 'navigation' },
+  { value: 'mixed', label: 'Mixte', icon: 'git-merge' },
+];
 
 /** Port de #page-explorer (index.html:751-786) — onglets Sentiers OSM / Communauté. */
 export function ExplorerScreen({ navigation }: Props) {
   const { tokens } = useTheme();
   const [tab, setTab] = useState<Tab>('trails');
+  const mapRef = useRef<RouteMapHandle>(null);
 
   const [trails, setTrails] = useState<OSMTrail[]>([]);
   const [trailFilter, setTrailFilter] = useState<TrailFilter>('all');
   const [loadingTrails, setLoadingTrails] = useState(false);
   const [trailsError, setTrailsError] = useState('');
+  const [searchCenter, setSearchCenter] = useState<LatLng | null>(null);
 
   const [community, setCommunity] = useState<CommunityRoute[]>([]);
+  const [communityFilter, setCommunityFilter] = useState<CommunityFilter>('all');
   const [loadingCommunity, setLoadingCommunity] = useState(false);
   const [communityError, setCommunityError] = useState('');
   const [communityLoaded, setCommunityLoaded] = useState(false);
@@ -36,7 +58,11 @@ export function ExplorerScreen({ navigation }: Props) {
     setTrailsError('');
     try {
       const center = await getUserLocation();
-      setTrails(await fetchNearbyTrails(center));
+      setSearchCenter(center);
+      const found = await fetchNearbyTrails(center);
+      setTrails(found);
+      const points = [center, ...found.map((t) => t.center).filter((c): c is LatLng => !!c)];
+      requestAnimationFrame(() => mapRef.current?.fitToCoordinates(points));
     } catch (e) {
       setTrailsError(e instanceof LocationError ? e.message : (e as Error).message);
     } finally {
@@ -63,25 +89,42 @@ export function ExplorerScreen({ navigation }: Props) {
   }
 
   const filteredTrails = trailFilter === 'all' ? trails : trails.filter((t) => t.type === trailFilter);
+  const filteredCommunity = communityFilter === 'all' ? community : community.filter((r) => r.terrain === communityFilter);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
       <View style={styles.tabRow}>
-        <TabButton label="🥾 Sentiers" active={tab === 'trails'} onPress={() => switchTab('trails')} />
-        <TabButton label="🌍 Communauté" active={tab === 'community'} onPress={() => switchTab('community')} />
+        <TabButton icon="compass" label="Sentiers" active={tab === 'trails'} onPress={() => switchTab('trails')} />
+        <TabButton icon="globe" label="Communauté" active={tab === 'community'} onPress={() => switchTab('community')} />
       </View>
 
       {tab === 'trails' ? (
         <View style={styles.flex}>
           {trails.length === 0 && !loadingTrails ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🥾</Text>
+              <LinearGradient colors={[`${tokens.accent}40`, 'transparent']} style={styles.emptyGlow} pointerEvents="none" />
+              <View style={[styles.emptyIconBadge, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
+                <Icon name="compass" size={30} color={tokens.accent} />
+              </View>
               <Text style={[styles.emptyTitle, { color: tokens.text, fontFamily: fonts.display }]}>Sentiers autour de toi</Text>
               <Text style={[styles.emptySub, { color: tokens.text2 }]}>Localise-toi pour découvrir les sentiers OSM dans un rayon de 25km.</Text>
-              <Button title="📍 Chercher autour de moi" onPress={loadTrails} loading={loadingTrails} />
+              <Button title="Chercher autour de moi" icon="map-pin" onPress={loadTrails} loading={loadingTrails} />
             </View>
           ) : (
             <>
+              <View style={styles.trailMapArea}>
+                <RouteMap
+                  ref={mapRef}
+                  initialRegion={searchCenter ? { latitude: searchCenter.lat, longitude: searchCenter.lng, latitudeDelta: 0.3, longitudeDelta: 0.3 } : DEFAULT_REGION}
+                  markers={filteredTrails
+                    .filter((t): t is OSMTrail & { center: LatLng } => !!t.center)
+                    .map((t) => ({ id: String(t.id), coord: t.center, color: MARKER_COLOR[t.type] }))}
+                  onMarkerPress={(id) => {
+                    const trail = trails.find((t) => String(t.id) === id);
+                    if (trail) navigation.navigate('TrailDetail', { trailId: trail.id, trailName: trail.name });
+                  }}
+                />
+              </View>
               <View style={styles.filterRow}>
                 {(['all', 'foot', 'bicycle', 'mtb'] as TrailFilter[]).map((f) => (
                   <Pressable
@@ -92,9 +135,13 @@ export function ExplorerScreen({ navigation }: Props) {
                       { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
                       trailFilter === f && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
                     ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filtrer : ${f === 'all' ? 'Tous' : TRAIL_FILTER_LABEL[f]}`}
+                    accessibilityState={{ selected: trailFilter === f }}
                   >
+                    {f !== 'all' && <Icon name={TRAIL_BADGE[f]} size={12} color={trailFilter === f ? tokens.text : tokens.text2} />}
                     <Text style={[styles.filterLabel, { color: tokens.text2, fontFamily: fonts.mono }, trailFilter === f && { color: tokens.text, fontWeight: '700' }]}>
-                      {f === 'all' ? 'Tous' : `${TRAIL_BADGE[f]} ${f === 'foot' ? 'Pédestre' : f === 'bicycle' ? 'Vélo' : 'VTT'}`}
+                      {f === 'all' ? 'Tous' : TRAIL_FILTER_LABEL[f]}
                     </Text>
                   </Pressable>
                 ))}
@@ -110,13 +157,15 @@ export function ExplorerScreen({ navigation }: Props) {
                   <Pressable
                     style={[styles.trailCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                     onPress={() => navigation.navigate('TrailDetail', { trailId: item.id, trailName: item.name })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Sentier ${item.name}, ${item.distance || '?'} km`}
                   >
-                    <Text style={styles.trailIcon}>{TRAIL_BADGE[item.type]}</Text>
+                    <Icon name={TRAIL_BADGE[item.type]} size={20} color={tokens.text2} />
                     <View style={styles.trailInfo}>
                       <Text style={[styles.trailName, { color: tokens.text, fontFamily: fonts.display }]}>{item.name}</Text>
                       <Text style={[styles.trailMeta, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.distance || '?'} km · {item.network || item.type}</Text>
                     </View>
-                    <Text style={[styles.trailArrow, { color: tokens.text3 }]}>›</Text>
+                    <Icon name="chevron-right" size={18} color={tokens.text3} />
                   </Pressable>
                 )}
               />
@@ -125,9 +174,38 @@ export function ExplorerScreen({ navigation }: Props) {
         </View>
       ) : (
         <View style={styles.flex}>
+          {community.length > 0 && (
+            <View style={styles.filterRow}>
+              {COMMUNITY_FILTERS.map((f) => (
+                <Pressable
+                  key={f.value}
+                  onPress={() => setCommunityFilter(f.value)}
+                  style={[
+                    styles.filterTab,
+                    { backgroundColor: tokens.surface2, borderColor: tokens.border2 },
+                    communityFilter === f.value && { backgroundColor: tokens.accentDim, borderColor: tokens.accent },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filtrer : ${f.label}`}
+                  accessibilityState={{ selected: communityFilter === f.value }}
+                >
+                  {f.icon && <Icon name={f.icon} size={12} color={communityFilter === f.value ? tokens.text : tokens.text2} />}
+                  <Text
+                    style={[
+                      styles.filterLabel,
+                      { color: tokens.text2, fontFamily: fonts.mono },
+                      communityFilter === f.value && { color: tokens.text, fontWeight: '700' },
+                    ]}
+                  >
+                    {f.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
           {!!communityError && <Text style={[styles.error, { color: tokens.danger }]}>{communityError}</Text>}
           <FlatList
-            data={community}
+            data={filteredCommunity}
             keyExtractor={(r) => r.id}
             contentContainerStyle={styles.list}
             refreshing={loadingCommunity}
@@ -135,8 +213,13 @@ export function ExplorerScreen({ navigation }: Props) {
             ListEmptyComponent={
               !loadingCommunity ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyIcon}>🌍</Text>
-                  <Text style={[styles.emptySub, { color: tokens.text2 }]}>Aucun parcours partagé. Sois le premier !</Text>
+                  <LinearGradient colors={[`${tokens.secondary}40`, 'transparent']} style={styles.emptyGlow} pointerEvents="none" />
+                  <View style={[styles.emptyIconBadge, { backgroundColor: tokens.surface2, borderColor: tokens.border }]}>
+                    <Icon name="globe" size={30} color={tokens.secondary} />
+                  </View>
+                  <Text style={[styles.emptySub, { color: tokens.text2 }]}>
+                    {community.length === 0 ? 'Aucun parcours partagé. Sois le premier !' : 'Aucun parcours dans cette catégorie.'}
+                  </Text>
                 </View>
               ) : null
             }
@@ -144,24 +227,36 @@ export function ExplorerScreen({ navigation }: Props) {
               <Pressable
                 style={[styles.communityCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Parcours ${item.name} par ${item.userName}, ${item.distKm.toFixed(1)} km`}
               >
-                <View style={styles.communityHeader}>
-                  <View style={[styles.communityAvatar, { backgroundColor: tokens.secondaryDim }]}>
-                    <Text style={[styles.communityAvatarText, { color: tokens.text, fontFamily: fonts.display }]}>{(item.userName[0] || 'A').toUpperCase()}</Text>
+                {item.coords?.length > 1 && (
+                  <View style={styles.communityPreview}>
+                    <RouteSatellitePreview coords={item.coords} color={tokens.accent} />
                   </View>
-                  <View style={styles.flex}>
-                    <Text style={[styles.communityName, { color: tokens.text, fontFamily: fonts.display }]} numberOfLines={1}>{item.name}</Text>
-                    <Text style={[styles.communityUser, { color: tokens.text3 }]}>{item.userName}</Text>
+                )}
+                <View style={styles.communityBody}>
+                  <View style={styles.communityHeader}>
+                    <View style={[styles.communityAvatar, { backgroundColor: tokens.secondaryDim }]}>
+                      <Text style={[styles.communityAvatarText, { color: tokens.text, fontFamily: fonts.display }]}>{(item.userName[0] || 'A').toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.flex}>
+                      <Text style={[styles.communityName, { color: tokens.text, fontFamily: fonts.display }]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[styles.communityUser, { color: tokens.text3 }]}>{item.userName}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.communityMeta}>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
+                    <Text style={[styles.communityStat, { color: tokens.accent, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
+                    <Text style={[styles.communityStatMuted, { color: tokens.text3, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
+                  </View>
+                  <View style={styles.communityRatingRow}>
+                    <Icon name="star" size={11} color={tokens.fav} />
+                    <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
+                      {item.ratingCount > 0 ? `${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
+                    </Text>
                   </View>
                 </View>
-                <View style={styles.communityMeta}>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>{item.distKm.toFixed(1)} km</Text>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>D+ {item.elevation?.totalAscent || 0}m</Text>
-                  <Text style={[styles.communityStat, { color: tokens.text2, fontFamily: fonts.mono }]}>{item.terrain || 'mixte'}</Text>
-                </View>
-                <Text style={[styles.communityRating, { color: tokens.fav, fontFamily: fonts.mono }]}>
-                  {item.ratingCount > 0 ? `⭐ ${item.avgRating.toFixed(1)} (${item.ratingCount})` : 'Pas encore noté'}
-                </Text>
               </Pressable>
             )}
           />
@@ -171,14 +266,18 @@ export function ExplorerScreen({ navigation }: Props) {
   );
 }
 
-function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function TabButton({ icon, label, active, onPress }: { icon: FeatherName; label: string; active: boolean; onPress: () => void }) {
   const { tokens } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={[styles.tabBtn, { backgroundColor: tokens.surface2 }, active && { backgroundColor: tokens.accent }]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
     >
-      <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.text, fontWeight: '700' }]}>{label}</Text>
+      <Icon name={icon} size={14} color={active ? tokens.onAccent : tokens.text2} />
+      <Text style={[styles.tabLabel, { color: tokens.text2, fontFamily: fonts.mono }, active && { color: tokens.onAccent, fontWeight: '700' }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -186,30 +285,34 @@ function TabButton({ label, active, onPress }: { label: string; active: boolean;
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   tabRow: { flexDirection: 'row', gap: 8, padding: 16 },
-  tabBtn: { flex: 1, paddingVertical: 10, borderRadius: radii.full, alignItems: 'center' },
+  tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: radii.full },
   tabLabel: { fontSize: 13 },
+  trailMapArea: { height: 180, marginHorizontal: 16, marginBottom: 10, borderRadius: radii.md, overflow: 'hidden' },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
-  filterTab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
+  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radii.full, borderWidth: 1 },
   filterLabel: { fontSize: 11 },
   error: { fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
-  list: { padding: 16, paddingTop: 0, gap: 10 },
-  empty: { alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
-  emptyIcon: { fontSize: 36 },
+  list: { flexGrow: 1, padding: 16, paddingTop: 0, gap: 10 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 32 },
+  emptyGlow: { position: 'absolute', top: -40, width: 280, height: 280, borderRadius: 140, alignSelf: 'center' },
+  emptyIconBadge: { width: 68, height: 68, borderRadius: 34, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   emptyTitle: { fontSize: 16 },
   emptySub: { fontSize: 13, textAlign: 'center' },
   trailCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radii.md, padding: 12, borderWidth: 1 },
-  trailIcon: { fontSize: 20 },
   trailInfo: { flex: 1 },
   trailName: { fontSize: 14 },
   trailMeta: { fontSize: 11 },
-  trailArrow: { fontSize: 18 },
-  communityCard: { borderRadius: radii.md, padding: 14, gap: 8, borderWidth: 1 },
+  communityCard: { borderRadius: radii.md, overflow: 'hidden', borderWidth: 1 },
+  communityPreview: { height: 110 },
+  communityBody: { padding: 14, gap: 8 },
   communityHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   communityAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   communityAvatarText: { fontSize: 14 },
   communityName: { fontSize: 14 },
   communityUser: { fontSize: 11 },
   communityMeta: { flexDirection: 'row', gap: 12 },
-  communityStat: { fontSize: 11 },
+  communityStat: { fontSize: 12, fontWeight: '700' },
+  communityStatMuted: { fontSize: 11 },
+  communityRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   communityRating: { fontSize: 11 },
 });

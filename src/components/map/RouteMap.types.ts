@@ -22,6 +22,9 @@ export interface RouteMapProps {
   /** Mode dessin manuel : un tap ajoute un point (index.html onMapClick, 4621-4650). */
   onMapPress?: (coord: LatLng) => void;
   onMarkerPress?: (id: string) => void;
+  /** L'utilisateur commence à déplacer/zoomer la carte lui-même (pas un flyTo/fitBounds
+   * programmatique) — sert à replier automatiquement un volet qui la recouvre. */
+  onUserInteraction?: () => void;
 }
 
 export interface RouteMapHandle {

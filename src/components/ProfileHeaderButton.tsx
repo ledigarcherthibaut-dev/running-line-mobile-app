@@ -22,10 +22,12 @@ export function ProfileHeaderButton() {
   return (
     <Pressable
       onPress={openAccount}
-      style={[styles.btn, { backgroundColor: tokens.accent, borderColor: 'rgba(0,0,0,0.15)' }]}
+      style={[styles.btn, { backgroundColor: tokens.accent, borderColor: tokens.secondary }]}
       hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Ouvrir mon compte"
     >
-      <Text style={[styles.text, { color: tokens.text, fontFamily: fonts.display }]}>{initial}</Text>
+      <Text style={[styles.text, { color: tokens.onAccent, fontFamily: fonts.display }]}>{initial}</Text>
     </Pressable>
   );
 }

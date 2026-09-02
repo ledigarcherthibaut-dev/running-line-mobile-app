@@ -1,6 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { GeneratedRoute } from '../../types';
+import { Coord, GeneratedRoute } from '../../types';
 
 /** Port fidèle de generateGPX (index.html:4238-4241). */
 export function generateGPX(route: Pick<GeneratedRoute, 'coords' | 'name'>): string {
@@ -34,6 +34,36 @@ export async function shareRouteAsGPX(route: Pick<GeneratedRoute, 'coords' | 'na
 
   await Sharing.shareAsync(file.uri, {
     mimeType: 'application/gpx+xml',
-    dialogTitle: `Envoyer "${route.name}"`,
+    // Garmin Connect ne s'inscrit pas comme destinataire de partage sur Android/iOS — il
+    // n'apparaîtra jamais dans cette liste, ce n'est pas un bug. Le libellé annonce donc
+    // « Enregistrer » plutôt que « Envoyer » pour ne pas laisser croire que Garmin y figure ;
+    // GarminExportModal guide ensuite vers l'import (web ou appli) une fois le fichier enregistré.
+    dialogTitle: `Enregistrer "${route.name}.gpx"`,
   });
+}
+
+/**
+ * Extrait les points de trace d'un fichier GPX (import, pour édition dans le mode dessin).
+ * Parseur minimal par regex plutôt qu'une dépendance XML : les fichiers GPX exportés par les
+ * montres/apps courantes (Garmin, Strava, cette app…) suivent tous le même schéma `<trkpt>`
+ * simple, pas besoin d'un parseur DOM complet pour ça.
+ */
+export function parseGPX(xml: string): Coord[] {
+  const coords: Coord[] = [];
+  const trkptRe = /<trkpt\b([^>]*?)(?:\/>|>([\s\S]*?)<\/trkpt>)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = trkptRe.exec(xml))) {
+    const attrs = m[1];
+    const inner = m[2] || '';
+    const latM = attrs.match(/\blat=["']([-\d.]+)["']/i);
+    const lonM = attrs.match(/\blon=["']([-\d.]+)["']/i);
+    if (!latM || !lonM) continue;
+    const lat = parseFloat(latM[1]);
+    const lon = parseFloat(lonM[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    const eleM = inner.match(/<ele>([-\d.]+)<\/ele>/i);
+    coords.push([lon, lat, eleM ? parseFloat(eleM[1]) : 0]);
+  }
+  if (coords.length < 2) throw new Error('Fichier GPX invalide ou vide (aucun point de tracé trouvé).');
+  return coords;
 }

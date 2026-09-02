@@ -1,9 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Icon, IconName } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
-import { RoutePreviewSvg } from '../../components/routePreview/RoutePreviewSvg';
+import { RouteSatellitePreview } from '../../components/routePreview/RouteSatellitePreview';
 import { useAuth } from '../../state/AuthContext';
 import { useRoutes } from '../../state/RoutesContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -11,11 +13,12 @@ import { fonts, radii } from '../../theme/tokens';
 import type { AppTabParamList, HomeStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeScreen'>;
+type FeatherName = IconName;
 
-const QUICK_PRESETS = [
-  { km: 5, terrain: 'mixed' as const, icon: '🌱', label: '5 km', sub: 'Récup' },
-  { km: 10, terrain: 'mixed' as const, icon: '🏃', sub: 'Endurance', label: '10 km' },
-  { km: 15, terrain: 'trail' as const, icon: '🏔️', sub: 'Trail', label: '15 km' },
+const QUICK_PRESETS: { km: number; terrain: 'mixed' | 'trail'; icon: FeatherName; label: string; sub: string }[] = [
+  { km: 5, terrain: 'mixed', icon: 'sunrise', label: '5 km', sub: 'Récup' },
+  { km: 10, terrain: 'mixed', icon: 'activity', sub: 'Endurance', label: '10 km' },
+  { km: 15, terrain: 'trail', icon: 'trending-up', sub: 'Trail', label: '15 km' },
 ];
 
 /** Port de #page-home (index.html:2299-2369) — hero, stats, parcours récents, générateur express. */
@@ -23,7 +26,7 @@ export function HomeScreen({ navigation }: Props) {
   const tabNavigation = navigation.getParent<BottomTabNavigationProp<AppTabParamList>>();
   const { tokens } = useTheme();
   const { profile } = useAuth();
-  const { savedRoutes } = useRoutes();
+  const { savedRoutes, loading, refresh } = useRoutes();
 
   const totalKm = savedRoutes.reduce((s, r) => s + (r.distKm || 0), 0);
   const totalDp = savedRoutes.reduce((s, r) => s + (r.elevation?.totalAscent || 0), 0);
@@ -36,15 +39,28 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: tokens.bg }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.container}>
+      {/* Sheen "chrome/fumé" diagonal sur tout l'écran — le fond était un aplat uni jusqu'ici. */}
+      <LinearGradient
+        colors={[`${tokens.tertiary}1F`, 'transparent', `${tokens.tertiary}12`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={tokens.text} />}
+      >
         <View style={styles.hero}>
+          <LinearGradient colors={[`${tokens.accent}33`, 'transparent']} style={styles.heroGlow} pointerEvents="none" />
           <Text style={[styles.greeting, { color: tokens.text2, fontFamily: fonts.mono }]}>{profile?.name || 'Coureur'}</Text>
           <Text style={[styles.title, { color: tokens.text, fontFamily: fonts.display }]}>Prêt pour ta{'\n'}prochaine sortie ?</Text>
           <Text style={[styles.subtitle, { color: tokens.text2 }]}>Des itinéraires uniques générés en secondes, autour de toi.</Text>
           <View style={styles.heroActions}>
             <Button title="Générer un parcours" onPress={() => goGenerate()} />
             <Button
-              title="🧭 Explorer autour de moi"
+              title="Explorer autour de moi"
+              icon="compass"
               variant="secondary"
               onPress={() => tabNavigation?.navigate('Explorer', { screen: 'ExplorerScreen' })}
             />
@@ -52,10 +68,10 @@ export function HomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.statsGrid}>
-          <StatCard icon="🔥" value={`${totalKm.toFixed(0)} km`} label="Distance totale" />
-          <StatCard icon="⛰️" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" />
-          <StatCard icon="🚩" value={String(savedRoutes.length)} label="Parcours créés" />
-          <StatCard icon="❤️" value={String(favCount)} label="Favoris" />
+          <StatCard icon="trending-up" value={`${totalKm.toFixed(0)} km`} label="Distance totale" color={tokens.accent} />
+          <StatCard icon="bar-chart-2" value={`${totalDp.toFixed(0)} m`} label="Dénivelé cumulé" color={tokens.secondary} />
+          <StatCard icon="flag" value={String(savedRoutes.length)} label="Parcours créés" color={tokens.sky} />
+          <StatCard icon="heart" value={String(favCount)} label="Favoris" color={tokens.energy} />
         </View>
 
         <View style={styles.section}>
@@ -66,8 +82,10 @@ export function HomeScreen({ navigation }: Props) {
                 key={p.label}
                 style={[styles.presetChip, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => goGenerate(p.km, p.terrain)}
+                accessibilityRole="button"
+                accessibilityLabel={`Générer ${p.label}, ${p.sub}`}
               >
-                <Text style={styles.presetIcon}>{p.icon}</Text>
+                <Icon name={p.icon} size={22} color={tokens.text} style={styles.presetIcon} />
                 <Text style={[styles.presetLabel, { color: tokens.text, fontFamily: fonts.display }]}>{p.label}</Text>
                 <Text style={[styles.presetSub, { color: tokens.text3, fontFamily: fonts.mono }]}>{p.sub}</Text>
               </Pressable>
@@ -75,50 +93,73 @@ export function HomeScreen({ navigation }: Props) {
           </ScrollView>
         </View>
 
-        {recent.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View>
-                <Text style={[styles.sectionTitle, { color: tokens.text3, fontFamily: fonts.mono }]}>DERNIERS PARCOURS</Text>
-                <Text style={[styles.sectionSub, { color: tokens.text2 }]}>Tes créations récentes</Text>
-              </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: tokens.text3, fontFamily: fonts.mono }]}>DERNIERS PARCOURS</Text>
+              <Text style={[styles.sectionSub, { color: tokens.text2 }]}>Tes créations récentes</Text>
+            </View>
+            {recent.length > 0 && (
               <Button
                 title="Voir tout"
                 variant="text"
                 onPress={() => tabNavigation?.navigate('MyRoutes', { screen: 'MyRoutesScreen' })}
               />
-            </View>
-            {recent.map((r) => (
+            )}
+          </View>
+          {recent.length > 0 ? (
+            recent.map((r) => (
               <Pressable
                 key={r.id}
                 style={[styles.recentCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
                 onPress={() => navigation.navigate('RouteDetail', { routeId: r.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Parcours ${r.name}, ${r.distKm.toFixed(1)} km`}
               >
                 <View style={styles.recentThumb}>
-                  <RoutePreviewSvg coords={r.coords} color={tokens.secondary} />
+                  <RouteSatellitePreview coords={r.coords} color={tokens.accent} />
                 </View>
                 <View style={styles.recentBody}>
                   <Text style={[styles.recentName, { color: tokens.text, fontFamily: fonts.display }]}>{r.name}</Text>
-                  <Text style={[styles.recentMeta, { color: tokens.text2, fontFamily: fonts.mono }]}>
-                    📏 {r.distKm.toFixed(1)} km · ⛰ D+{r.elevation.totalAscent}m · 🌿 {r.terrain}
-                  </Text>
+                  <View style={styles.recentMetaRow}>
+                    <MetaItem icon="trending-up" text={`${r.distKm.toFixed(1)} km`} color={tokens.text2} />
+                    <MetaItem icon="bar-chart-2" text={`D+${r.elevation.totalAscent}m`} color={tokens.text2} />
+                    <MetaItem icon="map" text={r.terrain} color={tokens.text2} />
+                  </View>
                 </View>
               </Pressable>
-            ))}
-          </View>
-        )}
+            ))
+          ) : (
+            <View style={[styles.emptyState, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+              <Icon name="flag" size={26} color={tokens.text3} />
+              <Text style={[styles.emptyStateTitle, { color: tokens.text, fontFamily: fonts.display }]}>Aucun parcours pour l'instant</Text>
+              <Text style={[styles.emptyStateSub, { color: tokens.text2 }]}>Génère ton premier parcours ci-dessus pour le retrouver ici.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function StatCard({ icon, value, label }: { icon: string; value: string; label: string }) {
+/** Chaque carte reprend une couleur de marque différente (au lieu d'un aplat surface2 uniforme
+ * partout) — plus de variété visuelle sans sortir de la palette. */
+function StatCard({ icon, value, label, color }: { icon: FeatherName; value: string; label: string; color: string }) {
   const { tokens } = useTheme();
   return (
-    <View style={[styles.statCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-      <Text style={styles.statIcon}>{icon}</Text>
-      <Text style={[styles.statValue, { color: tokens.text, fontFamily: fonts.display }]}>{value}</Text>
+    <View style={[styles.statCard, { backgroundColor: tokens.surface2, borderColor: `${color}40` }]}>
+      <Icon name={icon} size={18} color={color} />
+      <Text style={[styles.statValue, { color, fontFamily: fonts.display }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tokens.text2 }]}>{label}</Text>
+    </View>
+  );
+}
+
+function MetaItem({ icon, text, color }: { icon: FeatherName; text: string; color: string }) {
+  return (
+    <View style={styles.metaItem}>
+      <Icon name={icon} size={11} color={color} />
+      <Text style={[styles.recentMeta, { color, fontFamily: fonts.mono }]}>{text}</Text>
     </View>
   );
 }
@@ -127,14 +168,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { padding: 20, gap: 24 },
   hero: { gap: 8 },
+  heroGlow: { position: 'absolute', top: -60, left: '10%', width: '80%', height: 220, borderRadius: 999 },
   greeting: { fontSize: 12, letterSpacing: 1 },
   title: { fontSize: 28, lineHeight: 32 },
   subtitle: { fontSize: 14, marginBottom: 8 },
   heroActions: { gap: 8, marginTop: 4 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   statCard: { flexBasis: '47%', flexGrow: 1, borderRadius: radii.md, padding: 14, gap: 4, borderWidth: 1 },
-  statIcon: { fontSize: 22 },
-  statValue: { fontSize: 20 },
+  statValue: { fontSize: 24 },
   statLabel: { fontSize: 11 },
   section: { gap: 10 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -142,12 +183,17 @@ const styles = StyleSheet.create({
   sectionSub: { fontSize: 12, marginTop: 2 },
   presetRow: { gap: 10, paddingRight: 4 },
   presetChip: { width: 96, alignItems: 'center', gap: 2, paddingVertical: 14, borderRadius: radii.md, borderWidth: 1 },
-  presetIcon: { fontSize: 22, marginBottom: 4 },
+  presetIcon: { marginBottom: 4 },
   presetLabel: { fontSize: 15 },
   presetSub: { fontSize: 10 },
   recentCard: { flexDirection: 'row', borderRadius: radii.md, overflow: 'hidden', borderWidth: 1 },
   recentThumb: { width: 84, backgroundColor: '#080d12' },
   recentBody: { flex: 1, padding: 12, gap: 4 },
   recentName: { fontSize: 14 },
+  recentMetaRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   recentMeta: { fontSize: 11 },
+  emptyState: { alignItems: 'center', gap: 6, padding: 24, borderRadius: radii.md, borderWidth: 1 },
+  emptyStateTitle: { fontSize: 15, marginTop: 4 },
+  emptyStateSub: { fontSize: 12, textAlign: 'center' },
 });

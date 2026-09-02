@@ -18,6 +18,7 @@ type RoutesContextValue = {
   refresh: () => Promise<void>;
   toggleFavorite: (routeId: string) => Promise<void>;
   togglePublic: (routeId: string) => Promise<void>;
+  rename: (routeId: string, name: string) => Promise<void>;
   remove: (routeId: string) => Promise<void>;
 };
 
@@ -58,10 +59,16 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
     }
     const userId = session.user.id;
     let cancelled = false;
+    // Le fetch réseau fait autorité sur le cache local : si le cache (AsyncStorage) répond
+    // après que refresh() a déjà posé des données fraîches, il ne doit pas les écraser avec
+    // d'anciennes valeurs — d'où le drapeau plutôt qu'un simple fire-and-forget des deux en parallèle.
+    let refreshed = false;
     readCache<SavedRoute[]>(cacheKeyFor(userId)).then((cached) => {
-      if (!cancelled && cached) setSavedRoutes(cached);
+      if (!cancelled && cached && !refreshed) setSavedRoutes(cached);
     });
-    refresh();
+    refresh().finally(() => {
+      refreshed = true;
+    });
     return () => {
       cancelled = true;
     };
@@ -98,6 +105,20 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
     [session, savedRoutes]
   );
 
+  const rename = useCallback(
+    async (routeId: string, name: string) => {
+      if (!session?.user) return;
+      const { error } = await routesApi.renameRoute(session.user.id, routeId, name);
+      if (error) throw new Error(error.message);
+      setSavedRoutes((prev) => {
+        const next = prev.map((x) => (x.id === routeId ? { ...x, name } : x));
+        writeCache(cacheKeyFor(session.user.id), next);
+        return next;
+      });
+    },
+    [session]
+  );
+
   const remove = useCallback(
     async (routeId: string) => {
       if (!session?.user) return;
@@ -112,8 +133,8 @@ export function RoutesProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ savedRoutes, loading, refresh, toggleFavorite, togglePublic, remove }),
-    [savedRoutes, loading, refresh, toggleFavorite, togglePublic, remove]
+    () => ({ savedRoutes, loading, refresh, toggleFavorite, togglePublic, rename, remove }),
+    [savedRoutes, loading, refresh, toggleFavorite, togglePublic, rename, remove]
   );
 
   return <RoutesContext.Provider value={value}>{children}</RoutesContext.Provider>;

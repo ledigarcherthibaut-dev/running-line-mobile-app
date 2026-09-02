@@ -20,6 +20,33 @@ export function calcDist(coords: Coord[]): number {
   return d;
 }
 
+export interface MapRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+/**
+ * Région de carte englobant tous les points donnés, avec une marge — utilisée comme
+ * `initialRegion` pour que la carte s'affiche déjà centrée sur le contenu réel au premier
+ * rendu, plutôt qu'une vue générique le temps qu'un fitToCoordinates() impératif s'exécute.
+ */
+export function regionFromCoords(points: LatLng[], paddingFactor = 1.4): MapRegion {
+  const lats = points.map((p) => p.lat);
+  const lngs = points.map((p) => p.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: Math.max((maxLat - minLat) * paddingFactor, 0.01),
+    longitudeDelta: Math.max((maxLng - minLng) * paddingFactor, 0.01),
+  };
+}
+
 /** index.html:4193-4199 — point à `km` km de `o`, sur le cap `b` (degrés). */
 export function destPoint(o: LatLng, km: number, b: number): LatLng {
   const R = 6371;
@@ -31,6 +58,17 @@ export function destPoint(o: LatLng, km: number, b: number): LatLng {
   return { lat: (la2 * 180) / Math.PI, lng: (lo2 * 180) / Math.PI };
 }
 
+/** Cap initial (degrés, 0-360) du grand cercle allant de `a` à `b` — utilisé pour placer un
+ * point de détour perpendiculairement à un trajet direct. */
+export function bearingBetween(a: LatLng, b: LatLng): number {
+  const la1 = (a.lat * Math.PI) / 180;
+  const la2 = (b.lat * Math.PI) / 180;
+  const dLo = ((b.lng - a.lng) * Math.PI) / 180;
+  const y = Math.sin(dLo) * Math.cos(la2);
+  const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLo);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
 /** index.html:4200-4206 — 4 points formant une boucle approximative de longueur `km`, orientée `a` (cap), à l'échelle `s`. */
 export function loopWpts(o: LatLng, km: number, a: number, s = 1): LatLng[] {
   const sl = (km / 3) * s;
@@ -38,6 +76,61 @@ export function loopWpts(o: LatLng, km: number, a: number, s = 1): LatLng[] {
   const p2 = destPoint(p1, sl * 0.95, a + 70);
   const p3 = destPoint(p2, sl * 0.7, a + 160);
   return [o, p1, p2, p3, o];
+}
+
+/**
+ * Distance perpendiculaire d'un point à un segment, en km — approximation planaire (projection
+ * équirectangulaire locale autour de `a`), largement suffisante à l'échelle d'un parcours running.
+ */
+function pointSegmentDistanceKm(p: LatLng, a: LatLng, b: LatLng): number {
+  const R = 6371;
+  const cosLat = Math.cos((a.lat * Math.PI) / 180);
+  const toXY = (pt: LatLng) => ({
+    x: ((pt.lng - a.lng) * Math.PI * R * cosLat) / 180,
+    y: ((pt.lat - a.lat) * Math.PI * R) / 180,
+  });
+  const pxy = toXY(p);
+  const bxy = toXY(b);
+  const lenSq = bxy.x ** 2 + bxy.y ** 2;
+  if (lenSq === 0) return Math.hypot(pxy.x, pxy.y);
+  const t = Math.max(0, Math.min(1, (pxy.x * bxy.x + pxy.y * bxy.y) / lenSq));
+  return Math.hypot(pxy.x - t * bxy.x, pxy.y - t * bxy.y);
+}
+
+/** Algorithme de Ramer-Douglas-Peucker — réduit une trace dense à ses points les plus significatifs. */
+function douglasPeucker(points: LatLng[], toleranceKm: number): LatLng[] {
+  if (points.length < 3) return points;
+  let maxDist = 0;
+  let splitIndex = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = pointSegmentDistanceKm(points[i], first, last);
+    if (d > maxDist) {
+      maxDist = d;
+      splitIndex = i;
+    }
+  }
+  if (maxDist <= toleranceKm) return [first, last];
+  const left = douglasPeucker(points.slice(0, splitIndex + 1), toleranceKm);
+  const right = douglasPeucker(points.slice(splitIndex), toleranceKm);
+  return left.slice(0, -1).concat(right);
+}
+
+/**
+ * Simplifie une trace GPX dense (des centaines de points) en une poignée de points de contrôle
+ * modifiables — augmente progressivement la tolérance jusqu'à tenir sous `maxPoints`, plutôt que
+ * de fixer une tolérance unique qui donnerait trop ou trop peu de points selon la longueur du tracé.
+ */
+export function simplifyToWaypoints(points: LatLng[], maxPoints = 20): LatLng[] {
+  if (points.length <= maxPoints) return points;
+  let tolerance = 0.008;
+  let result = points;
+  for (let i = 0; i < 25 && result.length > maxPoints; i++) {
+    result = douglasPeucker(points, tolerance);
+    tolerance *= 1.6;
+  }
+  return result.length >= 2 ? result : [points[0], points[points.length - 1]];
 }
 
 /** index.html:4228-4236 */

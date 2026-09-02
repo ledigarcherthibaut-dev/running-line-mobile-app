@@ -4,6 +4,7 @@ import { Camera, CameraRef, GeoJSONSource, Layer, Map as MapLibreMap, MapRef, Ma
 import { TILE_URLS } from './tileStyles';
 import { RouteMapHandle, RouteMapProps } from './RouteMap.types';
 import { useTheme } from '../../theme/ThemeContext';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 /**
  * Carte native — MapLibre (open-source, aucune clé/compte requis) plutôt que
@@ -16,12 +17,16 @@ import { useTheme } from '../../theme/ThemeContext';
 const EMPTY_STYLE = { version: 8 as const, sources: {}, layers: [] };
 
 export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function RouteMap(
-  { initialRegion, tileStyle = 'osm', routes = [], markers = [], onMapPress, onMarkerPress },
+  // Satellite par défaut — plus riche visuellement et cohérent avec le thème sombre (les tuiles
+  // OSM claires juraient sur les écrans Générer/Résultats). Le dessin manuel repasse en OSM
+  // explicitement : les libellés de rues y sont utiles pour viser ses points au tap.
+  { initialRegion, tileStyle = 'satellite', routes = [], markers = [], onMapPress, onMarkerPress, onUserInteraction },
   ref
 ) {
   const { tokens } = useTheme();
   const mapRef = useRef<MapRef>(null);
   const cameraRef = useRef<CameraRef>(null);
+  const reducedMotion = useReducedMotion();
 
   useImperativeHandle(ref, () => ({
     fitToCoordinates(coords) {
@@ -30,11 +35,11 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
       const lats = coords.map((c) => c.lat);
       cameraRef.current?.fitBounds(
         [Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)],
-        { padding: { top: 60, right: 60, bottom: 60, left: 60 }, duration: 500 }
+        { padding: { top: 60, right: 60, bottom: 60, left: 60 }, duration: reducedMotion ? 0 : 500 }
       );
     },
     animateToRegion(region) {
-      cameraRef.current?.flyTo({ center: [region.longitude, region.latitude], zoom: 13, duration: 500 });
+      cameraRef.current?.flyTo({ center: [region.longitude, region.latitude], zoom: 13, duration: reducedMotion ? 0 : 500 });
     },
   }));
 
@@ -46,6 +51,13 @@ export const RouteMap = forwardRef<RouteMapHandle, RouteMapProps>(function Route
       onPress={
         onMapPress
           ? (e) => onMapPress({ lat: e.nativeEvent.lngLat[1], lng: e.nativeEvent.lngLat[0] })
+          : undefined
+      }
+      onRegionWillChange={
+        onUserInteraction
+          ? (e) => {
+              if (e.nativeEvent.userInteraction) onUserInteraction();
+            }
           : undefined
       }
     >

@@ -44,7 +44,7 @@ export function LoginScreen({ navigation }: Props) {
 
           <View style={[styles.card, { backgroundColor: tokens.surface }]}>
             <Text style={[styles.cardTitle, { color: tokens.text, fontFamily: fonts.display }]}>CONNEXION</Text>
-            <Text style={[styles.cardSubtitle, { color: tokens.text2 }]}>Content de te revoir 👋</Text>
+            <Text style={[styles.cardSubtitle, { color: tokens.text2 }]}>Content de te revoir</Text>
 
             <TextField
               label="Email"

@@ -24,5 +24,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: 16,
     fontSize: 16,
+    fontFamily: fonts.body,
   },
 });

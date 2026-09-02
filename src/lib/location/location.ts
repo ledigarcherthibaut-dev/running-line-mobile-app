@@ -15,8 +15,12 @@ export async function getUserLocation(): Promise<LatLng> {
   }
 
   try {
+    const positionPromise = Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+    // Le GPS continue de tourner en arrière-plan si le timeout gagne la course ci-dessous ;
+    // ce .catch() évite juste un "unhandled promise rejection" si l'appel échoue après coup.
+    positionPromise.catch(() => {});
     const position = await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
+      positionPromise,
       new Promise<never>((_, reject) => setTimeout(() => reject(new LocationError('TIMEOUT')), 15000)),
     ]);
     return { lat: position.coords.latitude, lng: position.coords.longitude };

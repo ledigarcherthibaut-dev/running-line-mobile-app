@@ -1,7 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '../../components/ui/Icon';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { resetPassword } from '../../lib/supabase/auth';
@@ -18,6 +19,11 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const goBackTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => {
+    if (goBackTimer.current) clearTimeout(goBackTimer.current);
+  }, []);
 
   async function handleSubmit() {
     setError('');
@@ -33,7 +39,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       return;
     }
     setSent(true);
-    setTimeout(() => navigation.goBack(), 2000);
+    goBackTimer.current = setTimeout(() => navigation.goBack(), 2000);
   }
 
   return (
@@ -55,10 +61,15 @@ export function ForgotPasswordScreen({ navigation }: Props) {
             />
 
             {!!error && <Text style={[styles.error, { color: tokens.danger }]}>{error}</Text>}
-            {sent && <Text style={[styles.success, { color: tokens.success }]}>📧 Email envoyé !</Text>}
+            {sent && (
+              <View style={styles.successRow}>
+                <Icon name="mail" size={14} color={tokens.success} />
+                <Text style={[styles.success, { color: tokens.success }]}>Email envoyé !</Text>
+              </View>
+            )}
 
             <Button title="Envoyer le lien" onPress={handleSubmit} loading={loading} disabled={sent} style={styles.submit} />
-            <Button title="← Retour à la connexion" variant="text" onPress={() => navigation.goBack()} />
+            <Button title="Retour à la connexion" icon="arrow-left" variant="text" onPress={() => navigation.goBack()} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -73,6 +84,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 20 },
   cardSubtitle: { fontSize: 14 },
   error: { fontSize: 13 },
+  successRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   success: { fontSize: 13 },
   submit: { marginTop: 8 },
 });

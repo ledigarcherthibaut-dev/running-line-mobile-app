@@ -2,8 +2,10 @@ import { useCallback, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { Manrope_400Regular } from '@expo-google-fonts/manrope';
 import * as SplashScreen from 'expo-splash-screen';
-import { ThemeProvider } from './src/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { ThemeProfileSync } from './src/theme/ThemeProfileSync';
 import { AuthProvider } from './src/state/AuthContext';
 import { RoutesProvider } from './src/state/RoutesContext';
 import { ToastProvider } from './src/state/ToastContext';
@@ -13,11 +15,17 @@ import { fonts } from './src/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
+/** Icônes claires sur fond sombre et inversement, alignées sur le thème choisi (pas seulement le système). */
+function ThemedStatusBar() {
+  const { resolvedScheme } = useTheme();
+  return <StatusBar style={resolvedScheme === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     [fonts.display]: require('./assets/fonts/Anton-Regular.ttf'),
     [fonts.mono]: require('./assets/fonts/RobotoMono-VariableFont_wght.ttf'),
-    [fonts.body]: require('./assets/fonts/Roboto-VariableFont_wdthwght.ttf'),
+    [fonts.body]: Manrope_400Regular,
   });
 
   const hideSplash = useCallback(async () => {
@@ -34,11 +42,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
+          <ThemeProfileSync />
           <RoutesProvider>
             <ToastProvider>
               <RootNavigator />
               <OfflineBanner />
-              <StatusBar style="auto" />
+              <ThemedStatusBar />
             </ToastProvider>
           </RoutesProvider>
         </AuthProvider>
